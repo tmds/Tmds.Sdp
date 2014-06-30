@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DEF92FB1-4EFB-4A18-9F98-2FF39B916922}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Tmds.Sdp</RootNamespace>
+    <AssemblyName>Tmds.Sdp</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tmds\Sdp\AnnouncedSession.cs" />
+    <Compile Include="Tmds\Sdp\AnnouncedSessionCollection.cs" />
+    <Compile Include="Tmds\Sdp\AttributeDictionary.cs" />
+    <Compile Include="Tmds\Sdp\Bandwidth.cs" />
+    <Compile Include="Tmds\Sdp\BandwidthCollection.cs" />
+    <Compile Include="Tmds\Sdp\Connection.cs" />
+    <Compile Include="Tmds\Sdp\ConnectionCollection.cs" />
+    <Compile Include="Tmds\Sdp\LoadOptions.cs" />
+    <Compile Include="Tmds\Sdp\Media.cs" />
+    <Compile Include="Tmds\Sdp\MediaCollection.cs" />
+    <Compile Include="Tmds\Sdp\NetworkInterface.cs" />
+    <Compile Include="Tmds\Sdp\NetworkInterfaceHandler.cs" />
+    <Compile Include="Tmds\Sdp\NetworkStreamReader.cs" />
+    <Compile Include="Tmds\Sdp\Origin.cs" />
+    <Compile Include="Tmds\Sdp\SapClient.cs" />
+    <Compile Include="Tmds\Sdp\SdpException.cs" />
+    <Compile Include="Tmds\Sdp\SessionDescription.cs" />
+    <Compile Include="Tmds\Sdp\StringCollection.cs" />
+    <Compile Include="Tmds\Sdp\Time.cs" />
+    <Compile Include="Tmds\Sdp\TimeCollection.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

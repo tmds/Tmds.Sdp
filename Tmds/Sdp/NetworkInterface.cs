@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NetworkInterfaceInformation = System.Net.NetworkInformation.NetworkInterface;
 
@@ -28,6 +29,8 @@ namespace Tmds.Sdp
         public string Name { get { return Information.Name; } }
         public string Description { get { return Information.Description; } }
         public string Id { get { return Information.Id; } }
+        public int Index { get; private set; }
+        static private int NextIndex = 0;
 
         public override bool Equals(object obj)
         {
@@ -47,6 +50,7 @@ namespace Tmds.Sdp
         internal NetworkInterface(NetworkInterfaceInformation info)
         {
             Information = info;
+            Index = Interlocked.Increment(ref NextIndex);
         }
 
         internal NetworkInterfaceInformation Information { get; private set; }

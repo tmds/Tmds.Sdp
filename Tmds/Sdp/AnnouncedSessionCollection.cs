@@ -28,7 +28,7 @@ namespace Tmds.Sdp
     {
         public AnnouncedSession this[int index]
         {
-            get { return _sessions[index]; }
+            get { return _sessions.Values[index]; }
         }
 
         public int Count
@@ -38,12 +38,12 @@ namespace Tmds.Sdp
 
         public IEnumerator<AnnouncedSession> GetEnumerator()
         {
-            return _sessions.GetEnumerator();
+            return _sessions.Values.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return _sessions.GetEnumerator();
+            return _sessions.Values.GetEnumerator();
         }
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
@@ -51,7 +51,7 @@ namespace Tmds.Sdp
 
         internal void Add(AnnouncedSession session)
         {
-            _sessions.Add(session);
+            _sessions.Add(new AnnouncedOrigin(session), session);
             int index = _sessions.Count - 1;
             if (PropertyChanged != null)
             {
@@ -67,7 +67,7 @@ namespace Tmds.Sdp
 
         internal void Remove(AnnouncedSession session)
         {
-            int index = _sessions.IndexOf(session);
+            int index = _sessions.IndexOfKey(new AnnouncedOrigin(session));
             _sessions.RemoveAt(index);
 
             if (PropertyChanged != null)
@@ -84,8 +84,9 @@ namespace Tmds.Sdp
 
         internal void Replace(AnnouncedSession oldSession, AnnouncedSession newSession)
         {
-            int index = _sessions.IndexOf(oldSession);
-            _sessions[index] = newSession;
+            AnnouncedOrigin key = new AnnouncedOrigin(oldSession);
+            int index = _sessions.IndexOfKey(key);
+            _sessions[key] = newSession;
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(IndexerName));
@@ -100,7 +101,6 @@ namespace Tmds.Sdp
         private const string CountString = "Count";
         private const string IndexerName = "Item[]";
 
-        private List<AnnouncedSession> _sessions = new List<AnnouncedSession>();
-
+        private SortedList<AnnouncedOrigin, AnnouncedSession> _sessions = new SortedList<AnnouncedOrigin, AnnouncedSession>();
     }
 }

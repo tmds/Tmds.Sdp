@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tmds\Sdp\AnnouncedOrigin.cs" />
     <Compile Include="Tmds\Sdp\AnnouncedSession.cs" />
     <Compile Include="Tmds\Sdp\AnnouncedSessionCollection.cs" />
     <Compile Include="Tmds\Sdp\AttributeDictionary.cs" />

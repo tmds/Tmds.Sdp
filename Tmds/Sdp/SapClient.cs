@@ -40,13 +40,14 @@ namespace Tmds.Sdp
 
         public SapClient()
         {
+            DefaultTimeOut = TimeSpan.FromHours(1);
             _sessionData = new Dictionary<AnnouncedOrigin, SessionData>();
             Sessions = new AnnouncedSessionCollection();
         }
 
         public bool IsEnabled { get; private set; }
         public SynchronizationContext SynchronizationContext { get; private set; }
-        public int DefaultTimeOut { get; set; }
+        public TimeSpan DefaultTimeOut { get; set; }
         public AnnouncedSessionCollection Sessions { get; private set; }
 
         public void Enable(SynchronizationContext synchronizationContext)
@@ -145,8 +146,8 @@ namespace Tmds.Sdp
                         }
                     });
                 }
-                sessionData.TimeOutTime = DateTime.Now + TimeSpan.FromMilliseconds(DefaultTimeOut);
-                sessionData.Timer.Change(DefaultTimeOut, System.Threading.Timeout.Infinite);
+                sessionData.TimeOutTime = DateTime.Now + DefaultTimeOut;
+                sessionData.Timer.Change(DefaultTimeOut, TimeSpan.FromMilliseconds(-1));
             }
         }
 
@@ -207,34 +208,6 @@ namespace Tmds.Sdp
             public DateTime TimeOutTime;
             public Timer Timer;
             public AnnouncedSession Session;
-        }
-        private class AnnouncedOrigin
-        {
-            public NetworkInterface Interface { get; private set; }
-            public Origin Origin { get; private set; }
-            public AnnouncedOrigin(Origin origin, NetworkInterface inter)
-            {
-                Origin = origin;
-                Interface = inter;
-            }
-            public override int GetHashCode()
-            {
-                int h1 = Interface.GetHashCode();
-                int h2 = Origin.GetSessionHashCode();
-                int hash = 17;
-                hash = hash * 31 + h1;
-                hash = hash * 31 + h2;
-                return hash;
-            }
-            public override bool Equals(object obj)
-            {
-                AnnouncedOrigin ao = obj as AnnouncedOrigin;
-                if (ao == null)
-                {
-                    return false;
-                }
-                return (Interface.Equals(ao.Interface) && Origin.IsSameSession(ao.Origin));
-            }
         }
 
         private void SynchronizationContextPost(SendOrPostCallback cb)

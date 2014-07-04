@@ -347,18 +347,40 @@ namespace Tmds.Sdp
         {
             return Origin.GetHashCode();
         }
-        public static SessionDescription Load(Stream stream, LoadOptions loadOptions = LoadOptions.Default)
+        public void Save(TextWriter textWriter)
         {
-            if (stream == null)
-            {
-                throw new ArgumentNullException("stream");
-            }
+            textWriter.Write(ToString());
+        }
+        public void Save(Stream stream)
+        {
+            Save(new StreamWriter(stream));
+        }
+        public static SessionDescription Parse(string text)
+        {
+            return Parse(text, LoadOptions.Default);
+        }
+        public static SessionDescription Parse(string text, LoadOptions options)
+        {
+            return Load(new StringReader(text), options);
+        }
+        public static SessionDescription Load(Stream stream)
+        {
+            return Load(stream, LoadOptions.Default);
+        }
+        public static SessionDescription Load(Stream stream, LoadOptions loadOptions)
+        {
+            return Load(new StreamReader(stream), loadOptions);
+        }
+        public static SessionDescription Load(TextReader reader)
+        {
+            return Load(reader, LoadOptions.Default);
+        }
+        public static SessionDescription Load(TextReader reader, LoadOptions loadOptions)
+        {
             SessionDescription sd = new SessionDescription();
 
-            StreamReader sr = new StreamReader(stream);
-
             Media media = null;
-            string line = sr.ReadLine();
+            string line = reader.ReadLine();
             while (line != null)
             {
                 if ((line.Length == 0) && ((loadOptions & LoadOptions.IgnoreEmptyLines) != 0))
@@ -649,7 +671,7 @@ namespace Tmds.Sdp
                     goto invalidline;
                 }
             nextline:
-                line = sr.ReadLine();
+                line = reader.ReadLine();
                 continue;
             invalidline:
                 throw new SdpException(string.Format("Invalid Line {0}", line));

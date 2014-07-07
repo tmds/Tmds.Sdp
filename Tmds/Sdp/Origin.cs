@@ -23,10 +23,12 @@ using System.Threading.Tasks;
 
 namespace Tmds.Sdp
 {
-    public struct Origin
+    public class Origin
     {
-        public Origin(ulong sessionID, ulong sessionVersion, IPAddress address) :
-            this()
+        public Origin() :
+            this(0, 0, IPAddress.Loopback)
+        {}
+        public Origin(ulong sessionID, ulong sessionVersion, IPAddress address)
         {
             if (address == null)
             {
@@ -46,8 +48,7 @@ namespace Tmds.Sdp
             }
             UnicastAddress = address.ToString();
         }
-        public Origin(string username, ulong sessionID, ulong sessionVersion, string networkType, string addressType, string unicastAddress) :
-            this()
+        public Origin(string username, ulong sessionID, ulong sessionVersion, string networkType, string addressType, string unicastAddress)
         {
             if (string.IsNullOrEmpty(username))
             {
@@ -72,32 +73,73 @@ namespace Tmds.Sdp
             AddressType = addressType;
             unicastAddress = UnicastAddress;
         }
-        internal bool IsValid
+        public SessionDescription SessionDescription { get; internal set; }
+        public bool IsReadOnly
         {
             get
             {
-                if (string.IsNullOrEmpty(UserName))
+                if (SessionDescription != null)
+                {
+                    return SessionDescription.IsReadOnly;
+                }
+                else
                 {
                     return false;
                 }
-                if (string.IsNullOrEmpty(NetworkType))
-                {
-                    return false;
-                }
-                if (string.IsNullOrEmpty(AddressType))
-                {
-                    return false;
-                }
-                if (string.IsNullOrEmpty(UnicastAddress))
-                {
-                    return false;
-                }
-                return true;
             }
         }
-        public string UserName { get; set; }
-        public ulong SessionID { get; set; }
-        public ulong SessionVersion { get; set; }
+        private string _userName;
+        public string UserName
+        {
+            get
+            {
+                return _userName;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    throw new ArgumentException("value");
+                }
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
+                }
+                _userName = value;
+            }
+        }
+        private ulong _sessionID;
+        public ulong SessionID
+        {
+            get
+            {
+                return _sessionID;
+            }
+            set
+            {
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
+                }
+                _sessionID = value;
+            }
+        }
+        private ulong _sessionVersion;
+        public ulong SessionVersion
+        {
+            get
+            {
+                return _sessionVersion;
+            }
+            set
+            {
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
+                }
+                _sessionVersion = value;
+            }
+        }
         private string _networkType;
         public string NetworkType
         {
@@ -110,6 +152,10 @@ namespace Tmds.Sdp
                 if (string.IsNullOrEmpty(value))
                 {
                     throw new ArgumentException("value");
+                }
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _networkType = value;
             }
@@ -127,6 +173,10 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
+                }
                 _addressType = value;
             }
         }
@@ -142,6 +192,10 @@ namespace Tmds.Sdp
                 if (string.IsNullOrEmpty(value))
                 {
                     throw new ArgumentException("value");
+                }
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _unicastAddress = value;
             }
@@ -165,6 +219,14 @@ namespace Tmds.Sdp
         }
         public static bool operator ==(Origin lhs, Origin rhs)
         {
+            if (Object.ReferenceEquals(lhs, rhs))
+            {
+                return true;
+            }
+            if (Object.ReferenceEquals(lhs, null) || Object.ReferenceEquals(rhs, null))
+            {
+                return false;
+            }
             return lhs.IsSameSession(rhs) && (lhs.SessionVersion == rhs.SessionVersion);
         }
         public static bool operator !=(Origin lhs, Origin rhs)
@@ -173,7 +235,7 @@ namespace Tmds.Sdp
         }
         public override bool Equals(object obj)
         {
-            Origin? o = obj as Origin?;
+            Origin o = obj as Origin;
             if (o == null)
             {
                 return false;

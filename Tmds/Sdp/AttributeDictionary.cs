@@ -52,7 +52,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             _values.Add(new KeyValuePair<string, string>(name, value));
         }
@@ -65,7 +65,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             _values.Add(new KeyValuePair<string, string>(name, null));
         }
@@ -78,7 +78,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             if (ContainsKey(name))
             {
@@ -95,7 +95,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             Set(name, (string)null);
         }
@@ -108,7 +108,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             if (ContainsKey(name))
             {
@@ -144,7 +144,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             int removed = 0;
             while (_values.Remove(new KeyValuePair<string, string>(name, value)))
@@ -162,7 +162,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             var attributes = _values.Where(pair => pair.Key.Equals(name)).ToArray();
 
@@ -245,7 +245,7 @@ namespace Tmds.Sdp
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             _values.Clear();
         }

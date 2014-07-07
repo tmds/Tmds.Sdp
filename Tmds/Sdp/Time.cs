@@ -24,14 +24,16 @@ namespace Tmds.Sdp
 {
     public struct Time
     {
-        public Time(ulong startTime, ulong stopTime)
+        public static DateTime Zero = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        public Time(DateTime startTime, DateTime stopTime)
             : this()
         {
             StartTime = startTime;
             StopTime = stopTime;
         }
-        public ulong StartTime { get; set; }
-        public ulong StopTime { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime StopTime { get; set; }
         internal bool IsValid
         {
             get
@@ -39,6 +41,5 @@ namespace Tmds.Sdp
                 return true;
             }
         }
-
     }
 }

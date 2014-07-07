@@ -58,7 +58,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             base.InsertItem(index, item);
             item.SessionDescription = SessionDescription;
@@ -67,7 +67,7 @@ namespace Tmds.Sdp
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             foreach (var media in this)
             {
@@ -79,7 +79,7 @@ namespace Tmds.Sdp
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             base[index].SessionDescription = null;
             base.RemoveItem(index);
@@ -96,7 +96,7 @@ namespace Tmds.Sdp
             }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
             base[index].SessionDescription = null;
             base.SetItem(index, item);

@@ -23,10 +23,13 @@ using System.Threading.Tasks;
 
 namespace Tmds.Sdp
 {
-    public struct Connection
+    public class Connection
     {
-        public Connection(IPAddress address, uint addressCount, uint ttl) :
-            this()
+        public Connection() :
+            this(IPAddress.Any, 1, 0)
+        {}
+
+        public Connection(IPAddress address, uint addressCount, uint ttl)
         {
             if (address == null)
             {
@@ -46,8 +49,7 @@ namespace Tmds.Sdp
             }
             Address = address.ToString();
         }
-        public Connection(string networkType, string addressType, string address, uint addressCount, uint ttl) :
-            this()
+        public Connection(string networkType, string addressType, string address, uint addressCount, uint ttl)
         {
             if (string.IsNullOrEmpty(networkType))
             {
@@ -67,6 +69,24 @@ namespace Tmds.Sdp
             AddressCount = addressCount;
             Ttl = ttl;
         }
+
+        public SessionDescription SessionDescription { get; internal set; }
+        public Media Media { get; internal set; }
+        public bool IsReadOnly
+        {
+            get
+            {
+                if (Media != null && Media.IsReadOnly)
+                {
+                    return true;
+                }
+                if (SessionDescription != null && SessionDescription.IsReadOnly)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
         private string _networkType;
         public string NetworkType
         {
@@ -79,6 +99,10 @@ namespace Tmds.Sdp
                 if (string.IsNullOrEmpty(value))
                 {
                     throw new ArgumentException("value");
+                }
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _networkType = value;
             }
@@ -96,6 +120,10 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
+                }
                 _addressType = value;
             }
         }
@@ -112,29 +140,43 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("SessionDescription is read-only");
+                }
                 _address = value;
             }
         }
-        public uint AddressCount { get; set; }
-        public uint Ttl { get; set; }
-
-        internal bool IsValid
+        private uint _addressCount;
+        public uint AddressCount
         {
             get
             {
-                if (string.IsNullOrEmpty(NetworkType))
+                return _addressCount;
+            }
+            set
+            {
+                if (IsReadOnly)
                 {
-                    return false;
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
-                if (string.IsNullOrEmpty(AddressType))
+                _addressCount = value;
+            }
+        }
+        private uint _ttl;
+        public uint Ttl
+        {
+            get
+            {
+                return _ttl;
+            }
+            set
+            {
+                if (IsReadOnly)
                 {
-                    return false;
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
-                if (string.IsNullOrEmpty(Address))
-                {
-                    return false;
-                }
-                return true;
+                _ttl = value;
             }
         }
     }

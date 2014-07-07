@@ -86,7 +86,7 @@ namespace Tmds.Sdp
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _type = value;
             }
@@ -102,7 +102,7 @@ namespace Tmds.Sdp
             {
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _port = value;
             }
@@ -118,7 +118,7 @@ namespace Tmds.Sdp
             {
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _portCount = value;
             }
@@ -138,7 +138,7 @@ namespace Tmds.Sdp
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _protocol = value;
             }
@@ -158,7 +158,7 @@ namespace Tmds.Sdp
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _format = value;
             }
@@ -178,7 +178,7 @@ namespace Tmds.Sdp
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _information = value;
             }

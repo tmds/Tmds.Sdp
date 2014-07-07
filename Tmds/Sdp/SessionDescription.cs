@@ -26,19 +26,24 @@ namespace Tmds.Sdp
 {
     public class SessionDescription
     {
-        public SessionDescription(string name, Origin origin)
+        public SessionDescription() :
+            this(true)
+        { }
+        private SessionDescription(bool initialize)
         {
-            if (string.IsNullOrEmpty("name"))
+            if (initialize)
             {
-                throw new ArgumentException("name");
+                Version = 0;
+                Origin = new Origin();
+                Name = " ";
+                Times.Add(new Time(Time.Zero, Time.Zero));
             }
-            if (!origin.IsValid)
+            else
             {
-                throw new ArgumentException("origin");
+                _version = -1;
+                _origin = null;
+                _name = null;
             }
-            Version = 0;
-            Origin = origin;
-            Name = name;
         }
 
         public bool IsReadOnly { get; private set; }
@@ -58,7 +63,7 @@ namespace Tmds.Sdp
             {
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _version = value;
             }
@@ -67,27 +72,36 @@ namespace Tmds.Sdp
         {
             get
             {
-                return _origin.HasValue;
+                return _origin != null;
             }
         }
-        private Origin? _origin;
+        private Origin _origin;
         public Origin Origin
         {
             get
             {
-                return _origin.Value;
+                return _origin;
             }
             set
             {
-                if (!value.IsValid)
+                if (value == null)
                 {
-                    throw new ArgumentException("origin");
+                    throw new ArgumentNullException("value");
+                }
+                if (value.SessionDescription != null)
+                {
+                    throw new ArgumentException("value");
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
+                }
+                if (_origin != null)
+                {
+                    _origin.SessionDescription = null;
                 }
                 _origin = value;
+                _origin.SessionDescription = this;
             }
         }
         private string _name;
@@ -105,7 +119,7 @@ namespace Tmds.Sdp
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _name = value;
             }
@@ -125,7 +139,7 @@ namespace Tmds.Sdp
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _information = value;
             }
@@ -145,7 +159,7 @@ namespace Tmds.Sdp
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _uri = value;
             }
@@ -192,27 +206,32 @@ namespace Tmds.Sdp
         {
             get
             {
-                return _connection.HasValue;
+                return _connection != null;
             }
         }
-        private Connection? _connection;
+        private Connection _connection;
         public Connection Connection
         {
             get
             {
-                return _connection.Value;
+                return _connection;
             }
             set
             {
-                if (!value.IsValid)
+                if (_connection.SessionDescription != null || _connection.Media != null)
                 {
                     throw new ArgumentException("value");
                 }
                 if (IsReadOnly)
                 {
-                    throw new InvalidOperationException("SessionDescription is Read-only");
+                    throw new InvalidOperationException("SessionDescription is read-only");
+                }
+                if (_connection != null)
+                {
+                    _connection.SessionDescription = null;
                 }
                 _connection = value;
+                _connection.SessionDescription = this;
             }
         }
         public bool HasBandwidths
@@ -234,7 +253,7 @@ namespace Tmds.Sdp
                 return _bandwidths;
             }
         }
-        public bool HasTimes
+        internal bool HasTimes
         {
             get
             {
@@ -253,6 +272,12 @@ namespace Tmds.Sdp
                 return _times;
             }
         }
+        public Time Time
+        {
+            get { return Times[0]; }
+            set { Times[0] = value; }
+        }
+
         public bool HasAttributes
         {
             get
@@ -297,11 +322,7 @@ namespace Tmds.Sdp
             {
                 return false;
             }
-            return ((Origin.SessionID.Equals(sd.Origin.SessionID))
-                && (Origin.UserName.Equals(sd.Origin.UserName))
-                && (Origin.NetworkType.Equals(sd.Origin.NetworkType))
-                && (Origin.AddressType.Equals(sd.Origin.AddressType))
-                && (Origin.UnicastAddress.Equals(sd.Origin.UnicastAddress)));
+            return Origin.IsSameSession(sd.Origin);
         }
         public bool IsUpdateOf(SessionDescription sd)
         {
@@ -311,7 +332,7 @@ namespace Tmds.Sdp
             }
             return Origin.IsUpdateOf(sd.Origin);
         }
-        public static bool operator ==(SessionDescription lhs, SessionDescription rhs)
+        public static bool operator==(SessionDescription lhs, SessionDescription rhs)
         {
             if (Object.ReferenceEquals(lhs, rhs))
             {
@@ -321,27 +342,16 @@ namespace Tmds.Sdp
             {
                 return false;
             }
-            if (!lhs.HasOrigin || !rhs.HasOrigin)
-            {
-                return false;
-            }
             return lhs.Origin == rhs.Origin;
         }
-        public static bool operator !=(SessionDescription lhs, SessionDescription rhs)
+        public static bool operator!=(SessionDescription lhs, SessionDescription rhs)
         {
             return !(lhs == rhs);
         }
         public override bool Equals(object obj)
         {
             SessionDescription sd = obj as SessionDescription;
-            if (sd == null)
-            {
-                return false;
-            }
-            else
-            {
-                return this == sd;
-            }
+            return this == sd;
         }
         public override int GetHashCode()
         {
@@ -377,7 +387,7 @@ namespace Tmds.Sdp
         }
         public static SessionDescription Load(TextReader reader, LoadOptions loadOptions)
         {
-            SessionDescription sd = new SessionDescription();
+            SessionDescription sd = new SessionDescription(false);
 
             Media media = null;
             string line = reader.ReadLine();
@@ -603,17 +613,27 @@ namespace Tmds.Sdp
                             {
                                 goto invalidline;
                             }
-                            ulong startTime = 0;
-                            if (!ulong.TryParse(parts[0], out startTime))
+                            decimal startTime = 0;
+                            if (!decimal.TryParse(parts[0], out startTime))
                             {
                                 goto invalidline;
                             }
-                            ulong stopTime = 0;
-                            if (!ulong.TryParse(parts[1], out stopTime))
+                            decimal stopTime = 0;
+                            if (!decimal.TryParse(parts[1], out stopTime))
                             {
                                 goto invalidline;
                             }
-                            sd.Times.Add(new Time(startTime, stopTime));
+                            DateTime startDateTime = Time.Zero;
+                            DateTime stopDateTime = Time.Zero;
+                            if (startTime != 0)
+                            {
+                                startDateTime = Time.Zero + TimeSpan.FromSeconds((double)startTime);
+                            }
+                            if (stopTime != 0)
+                            {
+                                stopDateTime = Time.Zero + TimeSpan.FromSeconds((double)stopTime);
+                            }
+                            sd.Times.Add(new Time(startDateTime, stopDateTime));
                             break;
                         case 'm':
                             media = new Media();
@@ -690,6 +710,10 @@ namespace Tmds.Sdp
             if (sd.Name == null)
             {
                 throw new SdpException("Name ('s=') is required");
+            }
+            if (!sd.HasTimes)
+            {
+                throw new SdpException("Time ('t=') is required");
             }
             return sd;
         }
@@ -776,9 +800,9 @@ namespace Tmds.Sdp
             foreach (Time time in Times)
             {
                 sb.Append("t=");
-                sb.Append(time.StartTime);
+                sb.Append((decimal)((time.StartTime - Time.Zero).TotalSeconds));
                 sb.Append(' ');
-                sb.Append(time.StopTime);
+                sb.Append((decimal)((time.StopTime - Time.Zero).TotalSeconds));
                 sb.Append("\r\n");
             }
             foreach (var attr in Attributes)
@@ -858,8 +882,5 @@ namespace Tmds.Sdp
             }
             return sb.ToString();
         }
-
-        internal SessionDescription()
-        { }
     }
 }

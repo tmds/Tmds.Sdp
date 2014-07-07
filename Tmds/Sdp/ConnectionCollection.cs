@@ -41,33 +41,48 @@ namespace Tmds.Sdp
         }
         protected override void InsertItem(int index, Connection item)
         {
-            if (!item.IsValid)
+            if (item == null)
             {
                 throw new ArgumentException("item");
             }
+            if (item.SessionDescription != null || item.Media != null)
+            {
+                throw new ArgumentException("value");
+            }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
+            item.Media = this.Media;
             base.InsertItem(index, item);
         }
         protected override void SetItem(int index, Connection item)
         {
-            if (!item.IsValid)
+            if (item == null)
             {
                 throw new ArgumentException("item");
             }
+            if (item.SessionDescription != null || item.Media != null)
+            {
+                throw new ArgumentException("value");
+            }
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
+            this[index].Media = null;
+            item.Media = this.Media;
             base.SetItem(index, item);
         }
         protected override void ClearItems()
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
+            }
+            foreach (Connection c in this)
+            {
+                c.Media = null;
             }
             base.ClearItems();
         }
@@ -75,8 +90,9 @@ namespace Tmds.Sdp
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("SessionDescription is Read-only");
+                throw new InvalidOperationException("SessionDescription is read-only");
             }
+            this[index].Media = null;
             base.RemoveItem(index);
         }
     }

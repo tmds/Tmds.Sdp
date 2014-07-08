@@ -257,7 +257,7 @@ namespace Tmds.Sdp
         {
             get
             {
-                return ((_times != null) && (_attributes.Count != 0));
+                return ((_times != null) && (_times.Count != 0));
             }
         }
         private TimeCollection _times;
@@ -332,7 +332,7 @@ namespace Tmds.Sdp
             }
             return Origin.IsUpdateOf(sd.Origin);
         }
-        public static bool operator==(SessionDescription lhs, SessionDescription rhs)
+        public static bool operator ==(SessionDescription lhs, SessionDescription rhs)
         {
             if (Object.ReferenceEquals(lhs, rhs))
             {
@@ -344,7 +344,7 @@ namespace Tmds.Sdp
             }
             return lhs.Origin == rhs.Origin;
         }
-        public static bool operator!=(SessionDescription lhs, SessionDescription rhs)
+        public static bool operator !=(SessionDescription lhs, SessionDescription rhs)
         {
             return !(lhs == rhs);
         }
@@ -433,33 +433,11 @@ namespace Tmds.Sdp
                             sd.Version = version;
                             break;
                         case 'o':
-                            Origin origin = new Origin();
                             if (media != null)
                             {
                                 goto invalidline;
                             }
-                            parts = value.Split(' ');
-                            if (parts.Length != 6)
-                            {
-                                goto invalidline;
-                            }
-                            origin.UserName = parts[0];
-                            ulong sessionID = 0;
-                            if (!ulong.TryParse(parts[1], out sessionID))
-                            {
-                                goto invalidline;
-                            }
-                            origin.SessionID = sessionID;
-                            ulong sessionVersion = 0;
-                            if (!ulong.TryParse(parts[2], out sessionVersion))
-                            {
-                                goto invalidline;
-                            }
-                            origin.SessionVersion = sessionVersion;
-                            origin.NetworkType = parts[3];
-                            origin.AddressType = parts[4];
-                            origin.UnicastAddress = parts[5];
-                            sd.Origin = origin;
+                            sd.Origin = Origin.Parse(value);
                             break;
                         case 's':
                             if (media != null)

@@ -112,18 +112,17 @@ namespace Tmds.Sdp
                     var stream = new MemoryStream(_buffer, 0, length, false, true);
                     Announcement announcement = ReadAnnouncement(stream);
 
-                    stream = new MemoryStream(_buffer, announcement.Payload.Offset, announcement.Payload.Count);
-                    SessionDescription description = null;
-                    description = SessionDescription.Load(stream);
-                    description.SetReadOnly();
-
                     if (announcement.Type == MessageType.Announcement)
                     {
+                        stream = new MemoryStream(_buffer, announcement.Payload.Offset, announcement.Payload.Count);
+                        SessionDescription description = SessionDescription.Load(stream);
+                        description.SetReadOnly();
                         SapClient.OnSessionAnnounce(this, description);
                     }
                     else
                     {
-                        SapClient.OnSessionDelete(this, description);
+                        string origin = Encoding.ASCII.GetString(announcement.Payload.Array, announcement.Payload.Offset + 2, announcement.Payload.Count - 4);
+                        SapClient.OnSessionDelete(this, Origin.Parse(origin));
                     }
                 }
                 catch (Exception e)

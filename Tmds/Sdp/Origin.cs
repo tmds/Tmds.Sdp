@@ -217,6 +217,14 @@ namespace Tmds.Sdp
             }
             return false;
         }
+        public bool IsUpdateOrEqual(Origin o)
+        {
+            if (IsSameSession(o))
+            {
+                return SessionVersion >= o.SessionVersion;
+            }
+            return false;
+        }
         public static bool operator ==(Origin lhs, Origin rhs)
         {
             if (Object.ReferenceEquals(lhs, rhs))
@@ -262,6 +270,33 @@ namespace Tmds.Sdp
             int hash = GetSessionHashCode();
             hash = hash * 31 + h4;
             return hash;
+        }
+
+        internal static Origin Parse(string value)
+        {
+            Origin origin = new Origin();
+            string[] parts = value.Split(' ');
+            if (parts.Length != 6)
+            {
+                throw new SdpException("origin");
+            }
+            origin.UserName = parts[0];
+            ulong sessionID = 0;
+            if (!ulong.TryParse(parts[1], out sessionID))
+            {
+                throw new SdpException("origin");
+            }
+            origin.SessionID = sessionID;
+            ulong sessionVersion = 0;
+            if (!ulong.TryParse(parts[2], out sessionVersion))
+            {
+                throw new SdpException("origin");
+            }
+            origin.SessionVersion = sessionVersion;
+            origin.NetworkType = parts[3];
+            origin.AddressType = parts[4];
+            origin.UnicastAddress = parts[5];
+            return origin;
         }
     }
 }

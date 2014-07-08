@@ -51,8 +51,9 @@ namespace Tmds.Sdp
 
         internal void Add(AnnouncedSession session)
         {
-            _sessions.Add(new AnnouncedOrigin(session), session);
-            int index = _sessions.Count - 1;
+            AnnouncedOrigin origin = new AnnouncedOrigin(session);
+            _sessions.Add(origin, session);
+            int index = _sessions.IndexOfKey(new AnnouncedOrigin(session));
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(CountString));

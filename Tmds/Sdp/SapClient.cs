@@ -151,11 +151,11 @@ namespace Tmds.Sdp
             }
         }
 
-        internal void OnSessionDelete(NetworkInterfaceHandler interfaceHandler, SessionDescription sd)
+        internal void OnSessionDelete(NetworkInterfaceHandler interfaceHandler, Origin origin)
         {
             lock (_sessionData)
             {
-                AnnouncedOrigin announcedOrigin = new AnnouncedOrigin(sd.Origin, interfaceHandler.NetworkInterface);
+                AnnouncedOrigin announcedOrigin = new AnnouncedOrigin(origin, interfaceHandler.NetworkInterface);
                 SessionData sessionData = null;
                 AnnouncedSession announcedSession = null;
                 if (_sessionData.TryGetValue(announcedOrigin, out sessionData))
@@ -165,7 +165,7 @@ namespace Tmds.Sdp
 
                 if (sessionData != null)
                 {
-                    if (sd.IsUpdateOf(announcedSession.SessionDescription))
+                    if (origin.IsUpdateOrEqual(announcedSession.SessionDescription.Origin))
                     {
                         sessionData.Timer.Dispose();
                         _sessionData.Remove(announcedOrigin);

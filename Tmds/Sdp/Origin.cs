@@ -71,7 +71,7 @@ namespace Tmds.Sdp
             SessionVersion = sessionVersion;
             NetworkType = networkType;
             AddressType = addressType;
-            unicastAddress = UnicastAddress;
+            UnicastAddress = unicastAddress;
         }
         public SessionDescription SessionDescription { get; internal set; }
         public bool IsReadOnly
@@ -165,7 +165,7 @@ namespace Tmds.Sdp
         {
             get
             {
-                return _networkType;
+                return _addressType;
             }
             set
             {
@@ -185,7 +185,7 @@ namespace Tmds.Sdp
         {
             get
             {
-                return _networkType;
+                return _unicastAddress;
             }
             set
             {

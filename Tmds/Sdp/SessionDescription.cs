@@ -100,10 +100,25 @@ namespace Tmds.Sdp
                 {
                     _origin.SessionDescription = null;
                 }
+                _session = null;
                 _origin = value;
                 _origin.SessionDescription = this;
             }
         }
+
+        private Session _session;
+        public Session Session
+        {
+            get
+            {
+                if (_session == null)
+                {
+                    _session = new SdpSession(this, null);
+                }
+                return _session;
+            }
+        }
+
         private string _name;
         public string Name
         {
@@ -218,7 +233,7 @@ namespace Tmds.Sdp
             }
             set
             {
-                if (_connection.SessionDescription != null || _connection.Media != null)
+                if (value.SessionDescription != null || value.Media != null)
                 {
                     throw new ArgumentException("value");
                 }

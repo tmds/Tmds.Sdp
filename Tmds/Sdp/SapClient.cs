@@ -41,7 +41,7 @@ namespace Tmds.Sdp
         public SapClient()
         {
             DefaultTimeOut = TimeSpan.FromHours(1);
-            _sessionData = new Dictionary<AnnouncedOrigin, SessionData>();
+            _sessionData = new Dictionary<SdpSession, SessionData>();
             Sessions = new AnnouncedSessionCollection();
         }
 
@@ -70,20 +70,6 @@ namespace Tmds.Sdp
             _interfaceHandlers = new Dictionary<int, NetworkInterfaceHandler>();
 
             NetworkInterfaceInformation[] interfaceInfos = NetworkInterfaceInformation.GetAllNetworkInterfaces();
-            foreach (NetworkInterfaceInformation interfaceInfo in interfaceInfos)
-            {
-                if (interfaceInfo.NetworkInterfaceType == NetworkInterfaceType.Loopback)
-                {
-                    continue;
-                }
-                if (interfaceInfo.NetworkInterfaceType == NetworkInterfaceType.Tunnel)
-                {
-                    continue;
-                }
-                var networkInterface = new NetworkInterface(interfaceInfo);
-                int index = interfaceInfo.GetIPProperties().GetIPv4Properties().Index;
-                _interfaceHandlers.Add(index, new NetworkInterfaceHandler(this, networkInterface));
-            }
             NetworkChange.NetworkAddressChanged += CheckNetworkInterfaceStatuses;
             CheckNetworkInterfaceStatuses(null, null);
         }
@@ -104,26 +90,26 @@ namespace Tmds.Sdp
         {
             lock (_sessionData)
             {
-                AnnouncedOrigin announcedOrigin = new AnnouncedOrigin(sd.Origin, interfaceHandler.NetworkInterface);
+                SdpSession session = new SdpSession(sd, interfaceHandler.NetworkInterface);
                 SessionData sessionData = null;
-                AnnouncedSession announcedSession = null;
-                if (_sessionData.TryGetValue(announcedOrigin, out sessionData))
+                SessionAnnouncement sessionAnnouncement = null;
+                if (_sessionData.TryGetValue(session, out sessionData))
                 {
-                    announcedSession = sessionData.Session;
+                    sessionAnnouncement = sessionData.Session;
                 }
 
                 if (sessionData != null)
                 {
-                    if (sd.IsUpdateOf(announcedSession.SessionDescription))
+                    if (sd.IsUpdateOf(sessionAnnouncement.SessionDescription))
                     {
-                        announcedSession = new AnnouncedSession(sd, interfaceHandler.NetworkInterface);
-                        AnnouncedSession oldSession = sessionData.Session;
-                        sessionData.Session = announcedSession;
+                        sessionAnnouncement = new SessionAnnouncement(sd, interfaceHandler.NetworkInterface);
+                        SessionAnnouncement oldAnnouncement = sessionData.Session;
+                        sessionData.Session = sessionAnnouncement;
                         SynchronizationContextPost(o =>
                         {
                             lock (Sessions)
                             {
-                                Sessions.Replace(oldSession, announcedSession);
+                                Sessions.Replace(oldAnnouncement, sessionAnnouncement);
                             }
                         });
                     }
@@ -131,18 +117,18 @@ namespace Tmds.Sdp
                 }
                 else
                 {
-                    announcedSession = new AnnouncedSession(sd, interfaceHandler.NetworkInterface);
+                    sessionAnnouncement = new SessionAnnouncement(sd, interfaceHandler.NetworkInterface);
                     sessionData = new SessionData()
                     {
-                        Session = announcedSession,
-                        Timer = new Timer(OnTimeOut, announcedOrigin, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite)
+                        Session = sessionAnnouncement,
+                        Timer = new Timer(OnTimeOut, session, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite)
                     };
-                    _sessionData.Add(announcedOrigin, sessionData);
+                    _sessionData.Add(session, sessionData);
                     SynchronizationContextPost(o =>
                     {
                         lock (Sessions)
                         {
-                            Sessions.Add(announcedSession);
+                            Sessions.Add(sessionAnnouncement);
                         }
                     });
                 }
@@ -155,20 +141,20 @@ namespace Tmds.Sdp
         {
             lock (_sessionData)
             {
-                AnnouncedOrigin announcedOrigin = new AnnouncedOrigin(origin, interfaceHandler.NetworkInterface);
+                SdpSession session = new SdpSession(origin, interfaceHandler.NetworkInterface);
                 SessionData sessionData = null;
-                AnnouncedSession announcedSession = null;
-                if (_sessionData.TryGetValue(announcedOrigin, out sessionData))
+                SessionAnnouncement sessionAnnouncement = null;
+                if (_sessionData.TryGetValue(session, out sessionData))
                 {
-                    announcedSession = sessionData.Session;
+                    sessionAnnouncement = sessionData.Session;
                 }
 
                 if (sessionData != null)
                 {
-                    if (origin.IsUpdateOrEqual(announcedSession.SessionDescription.Origin))
+                    if (origin.IsUpdateOrEqual(sessionAnnouncement.SessionDescription.Origin))
                     {
                         sessionData.Timer.Dispose();
-                        _sessionData.Remove(announcedOrigin);
+                        _sessionData.Remove(session);
                         SynchronizationContextPost(o =>
                         {
                             lock (Sessions)
@@ -185,13 +171,13 @@ namespace Tmds.Sdp
         {
             lock (_sessionData)
             {
-                var removedSessions = _sessionData.Where(s => s.Key.Interface == networkInterfaceHandler.NetworkInterface).ToList();
+                var removedSessions = _sessionData.Where(s => s.Key.NetworkInterface == networkInterfaceHandler.NetworkInterface).ToList();
                 foreach (var pair in removedSessions)
                 {
-                    AnnouncedOrigin announcedOrigin = pair.Key;
+                    SdpSession session = pair.Key;
                     SessionData sessionData = pair.Value;
                     sessionData.Timer.Dispose();
-                    _sessionData.Remove(announcedOrigin);
+                    _sessionData.Remove(session);
                     SynchronizationContextPost(o =>
                     {
                         lock (Sessions)
@@ -207,7 +193,7 @@ namespace Tmds.Sdp
         {
             public DateTime TimeOutTime;
             public Timer Timer;
-            public AnnouncedSession Session;
+            public SessionAnnouncement Session;
         }
 
         private void SynchronizationContextPost(SendOrPostCallback cb)
@@ -226,9 +212,9 @@ namespace Tmds.Sdp
         {
             lock (_sessionData)
             {
-                AnnouncedOrigin announcedOrigin = state as AnnouncedOrigin;
+                SdpSession session = state as SdpSession;
                 SessionData sessionData = null;
-                _sessionData.TryGetValue(announcedOrigin, out sessionData);
+                _sessionData.TryGetValue(session, out sessionData);
                 if (sessionData != null)
                 {
                     if (sessionData.TimeOutTime > DateTime.Now)
@@ -236,7 +222,7 @@ namespace Tmds.Sdp
                         return;
                     }
                     sessionData.Timer.Dispose();
-                    _sessionData.Remove(announcedOrigin);
+                    _sessionData.Remove(session);
                     SynchronizationContextPost(o =>
                     {
                         lock (Sessions)
@@ -252,6 +238,7 @@ namespace Tmds.Sdp
         {
             lock (_interfaceHandlers)
             {
+                HashSet<NetworkInterfaceHandler> handlers = new HashSet<NetworkInterfaceHandler>(_interfaceHandlers.Values);
                 NetworkInterfaceInformation[] interfaceInfos = NetworkInterfaceInformation.GetAllNetworkInterfaces();
                 foreach (NetworkInterfaceInformation interfaceInfo in interfaceInfos)
                 {
@@ -263,26 +250,34 @@ namespace Tmds.Sdp
                     {
                         continue;
                     }
-
                     int index = interfaceInfo.GetIPProperties().GetIPv4Properties().Index;
                     NetworkInterfaceHandler interfaceHandler;
                     _interfaceHandlers.TryGetValue(index, out interfaceHandler);
-                    if (interfaceHandler != null)
+                    if (interfaceHandler == null)
                     {
-                        if (interfaceInfo.OperationalStatus == OperationalStatus.Up)
-                        {
-                            interfaceHandler.Enable();
-                        }
-                        else
-                        {
-                            interfaceHandler.Disable();
-                        }
+                        var networkInterface = new NetworkInterface(interfaceInfo);
+                        index = interfaceInfo.GetIPProperties().GetIPv4Properties().Index;
+                        interfaceHandler = new NetworkInterfaceHandler(this, networkInterface);
+                        _interfaceHandlers.Add(index, interfaceHandler);
                     }
+                    if (interfaceInfo.OperationalStatus == OperationalStatus.Up)
+                    {
+                        interfaceHandler.Enable();
+                    }
+                    else
+                    {
+                        interfaceHandler.Disable();
+                    }
+                    handlers.Remove(interfaceHandler);
+                }
+                foreach (NetworkInterfaceHandler handler in handlers)
+                {
+                    handler.Disable();
                 }
             }
         }
 
         private Dictionary<int, NetworkInterfaceHandler> _interfaceHandlers;
-        private Dictionary<AnnouncedOrigin, SessionData> _sessionData;
+        private Dictionary<SdpSession, SessionData> _sessionData;
     }
 }

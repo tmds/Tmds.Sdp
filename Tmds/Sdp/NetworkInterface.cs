@@ -30,7 +30,7 @@ namespace Tmds.Sdp
         public string Description { get { return Information.Description; } }
         public string Id { get { return Information.Id; } }
         public int Index { get; private set; }
-        static private int NextIndex = 0;
+        static private int NextIndex = 1;
 
         public override bool Equals(object obj)
         {
@@ -39,12 +39,12 @@ namespace Tmds.Sdp
             {
                 return false;
             }
-            return Id.Equals(networkInterface.Id);
+            return Index.Equals(networkInterface.Index);
         }
 
         public override int GetHashCode()
         {
-            return Id.GetHashCode();
+            return Index.GetHashCode();
         }
 
         internal NetworkInterface(NetworkInterfaceInformation info)

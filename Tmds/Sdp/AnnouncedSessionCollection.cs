@@ -24,9 +24,9 @@ using System.Threading.Tasks;
 
 namespace Tmds.Sdp
 {
-    public class AnnouncedSessionCollection : IReadOnlyList<AnnouncedSession>, INotifyCollectionChanged, INotifyPropertyChanged
+    public class AnnouncedSessionCollection : IReadOnlyList<SessionAnnouncement>, INotifyCollectionChanged, INotifyPropertyChanged
     {
-        public AnnouncedSession this[int index]
+        public SessionAnnouncement this[int index]
         {
             get { return _sessions.Values[index]; }
         }
@@ -36,7 +36,7 @@ namespace Tmds.Sdp
             get { return _sessions.Count; }
         }
 
-        public IEnumerator<AnnouncedSession> GetEnumerator()
+        public IEnumerator<SessionAnnouncement> GetEnumerator()
         {
             return _sessions.Values.GetEnumerator();
         }
@@ -49,11 +49,11 @@ namespace Tmds.Sdp
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        internal void Add(AnnouncedSession session)
+        internal void Add(SessionAnnouncement announcement)
         {
-            AnnouncedOrigin origin = new AnnouncedOrigin(session);
-            _sessions.Add(origin, session);
-            int index = _sessions.IndexOfKey(new AnnouncedOrigin(session));
+            Session session = announcement.Session;
+            _sessions.Add(session, announcement);
+            int index = _sessions.IndexOfKey(announcement.Session);
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(CountString));
@@ -61,14 +61,14 @@ namespace Tmds.Sdp
             }
             if (CollectionChanged != null)
             {
-                var eventArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, session, index);
+                var eventArgs = new SessionChangedEventArgs(SessionChange.New, announcement, index);
                 CollectionChanged(this, eventArgs);
             }
         }
 
-        internal void Remove(AnnouncedSession session)
+        internal void Remove(SessionAnnouncement announcement)
         {
-            int index = _sessions.IndexOfKey(new AnnouncedOrigin(session));
+            int index = _sessions.IndexOfKey(announcement.Session);
             _sessions.RemoveAt(index);
 
             if (PropertyChanged != null)
@@ -78,23 +78,23 @@ namespace Tmds.Sdp
             }
             if (CollectionChanged != null)
             {
-                var eventArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, session, index);
+                var eventArgs = new SessionChangedEventArgs(SessionChange.Delete, announcement, index);
                 CollectionChanged(this, eventArgs);
             }
         }
 
-        internal void Replace(AnnouncedSession oldSession, AnnouncedSession newSession)
+        internal void Replace(SessionAnnouncement oldAnnouncement, SessionAnnouncement newAnnouncement)
         {
-            AnnouncedOrigin key = new AnnouncedOrigin(oldSession);
+            Session key = oldAnnouncement.Session;
             int index = _sessions.IndexOfKey(key);
-            _sessions[key] = newSession;
+            _sessions[key] = newAnnouncement;
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(IndexerName));
             }
             if (CollectionChanged != null)
             {
-                var eventArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, oldSession, newSession, index);
+                var eventArgs = new SessionChangedEventArgs(SessionChange.Update, newAnnouncement, oldAnnouncement, index);
                 CollectionChanged(this, eventArgs);
             }
         }
@@ -102,6 +102,6 @@ namespace Tmds.Sdp
         private const string CountString = "Count";
         private const string IndexerName = "Item[]";
 
-        private SortedList<AnnouncedOrigin, AnnouncedSession> _sessions = new SortedList<AnnouncedOrigin, AnnouncedSession>();
+        private SortedList<Session, SessionAnnouncement> _sessions = new SortedList<Session, SessionAnnouncement>();
     }
 }

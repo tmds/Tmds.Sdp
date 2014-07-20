@@ -22,9 +22,9 @@ using System.Threading.Tasks;
 
 namespace Tmds.Sdp
 {
-    public class AnnouncedSession
+    public class SessionAnnouncement
     {
-        public AnnouncedSession(SessionDescription sd, NetworkInterface inter)
+        public SessionAnnouncement(SessionDescription sd, NetworkInterface inter)
         {
             SessionDescription = sd;
             NetworkInterface = inter;
@@ -32,6 +32,18 @@ namespace Tmds.Sdp
 
         public SessionDescription SessionDescription { get; private set; }
         public NetworkInterface NetworkInterface { get; private set; }
+        private Session _session;
+        public Session Session
+        {
+            get
+            {
+                if (_session == null)
+                {
+                    _session = new SdpSession(this);
+                }
+                return _session;
+            }
+        }
 
         public override string ToString()
         {

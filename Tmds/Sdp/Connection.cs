@@ -112,7 +112,7 @@ namespace Tmds.Sdp
         {
             get
             {
-                return _networkType;
+                return _addressType;
             }
             set
             {
@@ -132,7 +132,7 @@ namespace Tmds.Sdp
         {
             get
             {
-                return _networkType;
+                return _address;
             }
             set
             {

@@ -24,15 +24,17 @@ namespace Tmds.Sdp
 {
     public class Media
     {
-        public static string TypeAudio = "audio";
-        public static string TypeVideo = "video";
-        public static string TypeText = "text";
-        public static string TypeApplication = "application";
-        public static string TypeMessage = "message";
+        public const string TypeAudio = "audio";
+        public const string TypeVideo = "video";
+        public const string TypeText = "text";
+        public const string TypeApplication = "application";
+        public const string TypeMessage = "message";
+        public static readonly string[] MediaTypes = null;
 
-        public static string ProtocolUdp = "udp";
-        public static string ProtocolRtpAvp = "RTP/AVP";
-        public static string ProtocolRtpSavp = "RTP/SAVP";
+        public const string ProtocolUdp = "udp";
+        public const string ProtocolRtpAvp = "RTP/AVP";
+        public const string ProtocolRtpSavp = "RTP/SAVP";
+        public static readonly string[] MediaProtocols = null;
 
         public Media(string type, uint port, uint portCount, string protocol, string format)
         {
@@ -84,6 +86,7 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                Grammar.ValidateToken(value);
                 if (IsReadOnly)
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
@@ -136,6 +139,7 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                Grammar.ValidateProtocol(value);
                 if (IsReadOnly)
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
@@ -156,6 +160,7 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                Grammar.ValidateToken(value);
                 if (IsReadOnly)
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
@@ -176,6 +181,7 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                Grammar.ValidateText(value);
                 if (IsReadOnly)
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
@@ -244,5 +250,11 @@ namespace Tmds.Sdp
 
         internal Media()
         { }
+
+        static Media()
+        {
+            MediaTypes = new[] { TypeAudio, TypeVideo, TypeText, TypeApplication, TypeMessage };
+            MediaProtocols = new[] { ProtocolUdp, ProtocolRtpAvp, ProtocolRtpSavp };
+        }
     }
 }

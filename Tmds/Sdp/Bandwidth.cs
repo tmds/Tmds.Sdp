@@ -24,8 +24,10 @@ namespace Tmds.Sdp
 {
     public struct Bandwidth
     {
-        public static string TypeConferenceTotal = "CT";
-        public static string TypeApplicationSpecific = "AS";
+        public const string TypeConferenceTotal = "CT";
+        public const string TypeApplicationSpecific = "AS";
+
+        public static readonly string[] BandwidthTypes = null;
 
         public Bandwidth(string type, uint value) :
             this()
@@ -65,6 +67,11 @@ namespace Tmds.Sdp
                 }
                 return true;
             }
+        }
+
+        static Bandwidth()
+        {
+            BandwidthTypes = new[] { TypeConferenceTotal, TypeApplicationSpecific };
         }
     }
 }

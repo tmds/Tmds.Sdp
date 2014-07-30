@@ -65,6 +65,10 @@ namespace Tmds.Sdp
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
                 }
+                if (value < 0)
+                {
+                    throw new ArgumentException("Version must be zero or higher", "value");
+                }
                 _version = value;
             }
         }
@@ -132,6 +136,7 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                Grammar.ValidateText(value);
                 if (IsReadOnly)
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
@@ -152,6 +157,7 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                Grammar.ValidateText(value);
                 if (IsReadOnly)
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
@@ -159,8 +165,8 @@ namespace Tmds.Sdp
                 _information = value;
             }
         }
-        private string _uri;
-        public string Uri
+        private Uri _uri;
+        public Uri Uri
         {
             get
             {
@@ -168,10 +174,6 @@ namespace Tmds.Sdp
             }
             set
             {
-                if (value == string.Empty)
-                {
-                    throw new ArgumentException("value");
-                }
                 if (IsReadOnly)
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
@@ -428,12 +430,12 @@ namespace Tmds.Sdp
                     switch (line[0])
                     {
                         case 'v':
-                            sd.Version = -1;
                             if (media != null)
                             {
                                 goto invalidline;
                             }
                             int version = -1;
+                            Grammar.ValidateDigits(value, false);
                             if (!int.TryParse(value, out version))
                             {
                                 goto invalidline;
@@ -476,7 +478,7 @@ namespace Tmds.Sdp
                             {
                                 goto invalidline;
                             }
-                            sd.Uri = value;
+                            sd.Uri = new Uri(value);
                             break;
                         case 'e':
                             if (media != null)
@@ -506,13 +508,14 @@ namespace Tmds.Sdp
                             {
                                 goto invalidline;
                             }
-                            conn.NetworkType = parts[0];
-                            conn.AddressType = parts[1];
+                            string networkType = parts[0];
+                            string addressType = parts[1];
                             parts = parts[2].Split('/');
                             if (parts.Length > 3)
                             {
                                 goto invalidline;
                             }
+                            conn.SetAddress(networkType, addressType, parts[0]);
                             conn.Address = parts[0];
                             conn.AddressCount = 1;
                             if (parts.Length >= 2)
@@ -559,8 +562,10 @@ namespace Tmds.Sdp
                                 goto invalidline;
                             }
                             string type = value.Substring(0, sep);
+                            string bw = value.Substring(sep + 1);
+                            Grammar.ValidateDigits(bw, false);
                             uint bwValue = 0;
-                            if (!uint.TryParse(value.Substring(sep + 1), out bwValue))
+                            if (!uint.TryParse(bw, out bwValue))
                             {
                                 goto invalidline;
                             }
@@ -606,13 +611,15 @@ namespace Tmds.Sdp
                             {
                                 goto invalidline;
                             }
-                            decimal startTime = 0;
-                            if (!decimal.TryParse(parts[0], out startTime))
+                            Grammar.ValidateTime(parts[0]);
+                            double startTime = 0;
+                            if (!double.TryParse(parts[0], out startTime))
                             {
                                 goto invalidline;
                             }
-                            decimal stopTime = 0;
-                            if (!decimal.TryParse(parts[1], out stopTime))
+                            Grammar.ValidateTime(parts[1]);
+                            double stopTime = 0;
+                            if (!double.TryParse(parts[1], out stopTime))
                             {
                                 goto invalidline;
                             }
@@ -620,11 +627,11 @@ namespace Tmds.Sdp
                             DateTime stopDateTime = Time.Zero;
                             if (startTime != 0)
                             {
-                                startDateTime = Time.Zero + TimeSpan.FromSeconds((double)startTime);
+                                startDateTime = Time.Zero + TimeSpan.FromSeconds(startTime);
                             }
                             if (stopTime != 0)
                             {
-                                stopDateTime = Time.Zero + TimeSpan.FromSeconds((double)stopTime);
+                                stopDateTime = Time.Zero + TimeSpan.FromSeconds(stopTime);
                             }
                             sd.Times.Add(new Time(startDateTime, stopDateTime));
                             break;
@@ -647,6 +654,7 @@ namespace Tmds.Sdp
                             }
                             uint port = 0;
                             media.PortCount = 1;
+                            Grammar.ValidateDigits(parts[0], false);
                             if (!uint.TryParse(parts[0], out port))
                             {
                                 goto invalidline;
@@ -655,6 +663,7 @@ namespace Tmds.Sdp
                             if (parts.Length == 2)
                             {
                                 uint portCount = 0;
+                                Grammar.ValidateDigits(parts[1], true);
                                 if (!uint.TryParse(parts[1], out portCount))
                                 {
                                     goto invalidline;
@@ -729,7 +738,7 @@ namespace Tmds.Sdp
             sb.Append(' ');
             sb.Append(Origin.AddressType);
             sb.Append(' ');
-            sb.Append(Origin.UnicastAddress);
+            sb.Append(Origin.Address);
             sb.Append("\r\n");
 
             sb.Append("s=");
@@ -875,5 +884,7 @@ namespace Tmds.Sdp
             }
             return sb.ToString();
         }
+
+        public SessionAnnouncement Announcement { get; internal set; }
     }
 }

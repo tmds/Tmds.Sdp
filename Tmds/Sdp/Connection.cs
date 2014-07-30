@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,18 +37,15 @@ namespace Tmds.Sdp
                 throw new ArgumentException("address");
             }
             AddressCount = addressCount;
-            NetworkType = "IN";
+            IPAddress = address;
             if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
             {
-                AddressType = "IP4";
                 Ttl = ttl;
             }
             else
             {
-                AddressType = "IP6";
                 Ttl = 0;
             }
-            Address = address.ToString();
         }
         public Connection(string networkType, string addressType, string address, uint addressCount, uint ttl)
         {
@@ -63,14 +61,30 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentException("address");
             }
-            NetworkType = networkType;
-            AddressType = addressType;
-            Address = address;
+            SetAddress(networkType, addressType, address);
             AddressCount = addressCount;
             Ttl = ttl;
         }
 
-        public SessionDescription SessionDescription { get; internal set; }
+        private SessionDescription _sessionDescription;
+        public SessionDescription SessionDescription
+        {
+            get
+            {
+                if (Media != null)
+                {
+                    return Media.SessionDescription;
+                }
+                else
+                {
+                    return _sessionDescription;
+                }
+            }
+            internal set 
+            {
+                _sessionDescription = value;
+            }
+        }
         public Media Media { get; internal set; }
         public bool IsReadOnly
         {
@@ -96,15 +110,7 @@ namespace Tmds.Sdp
             }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentException("value");
-                }
-                if (IsReadOnly)
-                {
-                    throw new InvalidOperationException("SessionDescription is read-only");
-                }
-                _networkType = value;
+                SetAddress(value, _networkType, _address);
             }
         }
         private string _addressType;
@@ -116,15 +122,7 @@ namespace Tmds.Sdp
             }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentException("value");
-                }
-                if (IsReadOnly)
-                {
-                    throw new InvalidOperationException("SessionDescription is read-only");
-                }
-                _addressType = value;
+                SetAddress(_networkType, value, _address);
             }
         }
         private string _address;
@@ -136,15 +134,49 @@ namespace Tmds.Sdp
             }
             set
             {
-                if (string.IsNullOrEmpty(value))
+                SetAddress(_networkType, _addressType, value);
+            }
+        }
+        public void SetAddress(string networkType, string addressType, string address)
+        {
+            if (string.IsNullOrEmpty(networkType))
+            {
+                throw new ArgumentException("networkType");
+            }
+            if (string.IsNullOrEmpty(addressType))
+            {
+                throw new ArgumentException("addressType");
+            }
+            if (string.IsNullOrEmpty(address))
+            {
+                throw new ArgumentException("address");
+            }
+            Grammar.ValidateToken(networkType);
+            Grammar.ValidateToken(addressType);
+            Grammar.ValidateAddress(address);
+            if (IsReadOnly)
+            {
+                throw new InvalidOperationException("SessionDescription is read-only");
+            }
+            _networkType = networkType;
+            _addressType = addressType;
+            _address = address;
+        }
+        public IPAddress IPAddress
+        {
+            get
+            {
+                IPAddress ipAddress;
+                IPAddress.TryParse(_address, out ipAddress);
+                return ipAddress;
+            }
+            set
+            {
+                if (value == null)
                 {
                     throw new ArgumentException("value");
                 }
-                if (IsReadOnly)
-                {
-                    throw new InvalidOperationException("SessionDescription is read-only");
-                }
-                _address = value;
+                SetAddress("IN", value.AddressFamily == AddressFamily.InterNetwork ? "IP4" : "IP6", value.ToString());
             }
         }
         private uint _addressCount;
@@ -177,6 +209,22 @@ namespace Tmds.Sdp
                     throw new InvalidOperationException("SessionDescription is read-only");
                 }
                 _ttl = value;
+            }
+        }
+        public NetworkInterface NetworkInterface
+        {
+            get
+            {
+                SessionDescription sd = SessionDescription;
+                if (sd != null)
+                {
+                    SessionAnnouncement sa = sd.Announcement;
+                    if (sa != null)
+                    {
+                        return sa.NetworkInterface;
+                    }
+                }
+                return null;
             }
         }
     }

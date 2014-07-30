@@ -24,9 +24,14 @@ namespace Tmds.Sdp
 {
     public class SessionAnnouncement
     {
-        public SessionAnnouncement(SessionDescription sd, NetworkInterface inter)
+        public SessionAnnouncement(SessionDescription sessionDescription, NetworkInterface inter)
         {
-            SessionDescription = sd;
+            if (sessionDescription.Announcement != null)
+            {
+                throw new ArgumentException("sessionDescription");
+            }
+            SessionDescription = sessionDescription;
+            SessionDescription.Announcement = this;
             NetworkInterface = inter;
         }
 

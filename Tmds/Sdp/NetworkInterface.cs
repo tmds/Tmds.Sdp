@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,9 +51,23 @@ namespace Tmds.Sdp
         internal NetworkInterface(NetworkInterfaceInformation info)
         {
             Information = info;
+            IPv4Index = -1;
+            IPv6Index = -1;
+            if (info.Supports(NetworkInterfaceComponent.IPv4))
+            {
+                IPv4Index = info.GetIPProperties().GetIPv4Properties().Index;
+            }
+            if (info.Supports(NetworkInterfaceComponent.IPv6))
+            {
+                IPv6Index = info.GetIPProperties().GetIPv6Properties().Index;
+            }
             Index = Interlocked.Increment(ref NextIndex);
         }
 
         internal NetworkInterfaceInformation Information { get; private set; }
+
+        public int IPv4Index { get; private set; }
+
+        public long IPv6Index { get; private set; }
     }
 }

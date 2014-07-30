@@ -34,7 +34,25 @@ namespace Tmds.Sdp
             Media = media;
         }
 
-        public SessionDescription SessionDescription { get; private set; }
+        private SessionDescription _sessionDescription;
+        public SessionDescription SessionDescription
+        {
+            get
+            {
+                if (Media != null)
+                {
+                    return Media.SessionDescription;
+                }
+                else
+                {
+                    return _sessionDescription;
+                }
+            }
+            internal set
+            {
+                _sessionDescription = value;
+            }
+        }
         public Media Media { get; private set; }
 
         public bool IsReadOnly
@@ -59,6 +77,7 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentException("item");
             }
+            Validate(item);
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -71,6 +90,7 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentException("item");
             }
+            Validate(item);
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -92,6 +112,10 @@ namespace Tmds.Sdp
                 throw new InvalidOperationException("SessionDescription is read-only");
             }
             base.RemoveItem(index);
+        }
+        private void Validate(Bandwidth item)
+        {
+            Grammar.ValidateToken(item.Type);
         }
     }
 }

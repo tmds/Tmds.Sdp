@@ -71,8 +71,8 @@ namespace Tmds.Sdp
             {
                 if (SessionDescription.Origin.SessionID == other.SessionDescription.Origin.SessionID)
                 {
-                    return string.Format("{0} {1} {2} {3}", SessionDescription.Origin.UserName, SessionDescription.Origin.NetworkType, SessionDescription.Origin.AddressType, SessionDescription.Origin.UnicastAddress)
-                        .CompareTo(string.Format("{0} {1} {2} {3}", other.SessionDescription.Origin.UserName, other.SessionDescription.Origin.NetworkType, other.SessionDescription.Origin.AddressType, other.SessionDescription.Origin.UnicastAddress));
+                    return string.Format("{0} {1} {2} {3}", SessionDescription.Origin.UserName, SessionDescription.Origin.NetworkType, SessionDescription.Origin.AddressType, SessionDescription.Origin.Address)
+                        .CompareTo(string.Format("{0} {1} {2} {3}", other.SessionDescription.Origin.UserName, other.SessionDescription.Origin.NetworkType, other.SessionDescription.Origin.AddressType, other.SessionDescription.Origin.Address));
                 }
                 else
                 {

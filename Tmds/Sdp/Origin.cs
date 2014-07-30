@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,18 +38,9 @@ namespace Tmds.Sdp
             UserName = "-";
             SessionID = sessionID;
             SessionVersion = sessionVersion;
-            NetworkType = "IN";
-            if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-            {
-                AddressType = "IP4";
-            }
-            else
-            {
-                AddressType = "IP6";
-            }
-            UnicastAddress = address.ToString();
+            IPAddress = address;
         }
-        public Origin(string username, ulong sessionID, ulong sessionVersion, string networkType, string addressType, string unicastAddress)
+        public Origin(string username, ulong sessionID, ulong sessionVersion, string networkType, string addressType, string address)
         {
             if (string.IsNullOrEmpty(username))
             {
@@ -62,16 +54,14 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentException("addressType");
             }
-            if (string.IsNullOrEmpty(unicastAddress))
+            if (string.IsNullOrEmpty(address))
             {
                 throw new ArgumentException("unicastAddress");
             }
             UserName = username;
             SessionID = sessionID;
             SessionVersion = sessionVersion;
-            NetworkType = networkType;
-            AddressType = addressType;
-            UnicastAddress = unicastAddress;
+            SetAddress(networkType, addressType, address);
         }
         public SessionDescription SessionDescription { get; internal set; }
         public bool IsReadOnly
@@ -101,6 +91,7 @@ namespace Tmds.Sdp
                 {
                     throw new ArgumentException("value");
                 }
+                Grammar.ValidateNonWsString(value);
                 if (IsReadOnly)
                 {
                     throw new InvalidOperationException("SessionDescription is read-only");
@@ -149,15 +140,7 @@ namespace Tmds.Sdp
             }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentException("value");
-                }
-                if (IsReadOnly)
-                {
-                    throw new InvalidOperationException("SessionDescription is read-only");
-                }
-                _networkType = value;
+                SetAddress(value, _networkType, _address);
             }
         }
         private string _addressType;
@@ -169,35 +152,61 @@ namespace Tmds.Sdp
             }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentException("value");
-                }
-                if (IsReadOnly)
-                {
-                    throw new InvalidOperationException("SessionDescription is read-only");
-                }
-                _addressType = value;
+                SetAddress(_networkType, value, _address);
             }
         }
-        public string _unicastAddress;
-        public string UnicastAddress
+        private string _address;
+        public string Address
         {
             get
             {
-                return _unicastAddress;
+                return _address;
             }
             set
             {
-                if (string.IsNullOrEmpty(value))
+                SetAddress(_networkType, _addressType, value);
+            }
+        }
+        public void SetAddress(string networkType, string addressType, string address)
+        {
+            if (string.IsNullOrEmpty(networkType))
+            {
+                throw new ArgumentException("networkType");
+            }
+            if (string.IsNullOrEmpty(addressType))
+            {
+                throw new ArgumentException("addressType");
+            }
+            if (string.IsNullOrEmpty(address))
+            {
+                throw new ArgumentException("address");
+            }
+            Grammar.ValidateToken(networkType);
+            Grammar.ValidateToken(addressType);
+            Grammar.ValidateUnicastAddress(address);
+            if (IsReadOnly)
+            {
+                throw new InvalidOperationException("SessionDescription is read-only");
+            }
+            _networkType = networkType;
+            _addressType = addressType;
+            _address = address;
+        }
+        public IPAddress IPAddress
+        {
+            get
+            {
+                IPAddress ipAddress;
+                IPAddress.TryParse(_address, out ipAddress);
+                return ipAddress;
+            }
+            set
+            {
+                if (value == null)
                 {
                     throw new ArgumentException("value");
                 }
-                if (IsReadOnly)
-                {
-                    throw new InvalidOperationException("SessionDescription is read-only");
-                }
-                _unicastAddress = value;
+                SetAddress("IN", value.AddressFamily == AddressFamily.InterNetwork ? "IP4" : "IP6", value.ToString());
             }
         }
 
@@ -207,7 +216,7 @@ namespace Tmds.Sdp
                 && (UserName.Equals(o.UserName))
                 && (NetworkType.Equals(o.NetworkType))
                 && (AddressType.Equals(o.AddressType))
-                && (UnicastAddress.Equals(o.UnicastAddress)));
+                && (Address.Equals(o.Address)));
         }
         public bool IsUpdateOf(Origin o)
         {
@@ -256,7 +265,7 @@ namespace Tmds.Sdp
         public int GetSessionHashCode()
         {
             int h1 = UserName != null ? UserName.GetHashCode() : 0;
-            int h2 = UnicastAddress != null ? UnicastAddress.GetHashCode() : 0;
+            int h2 = Address != null ? Address.GetHashCode() : 0;
             int h3 = SessionID.GetHashCode();
             int hash = 17;
             hash = hash * 31 + h1;
@@ -282,20 +291,20 @@ namespace Tmds.Sdp
             }
             origin.UserName = parts[0];
             ulong sessionID = 0;
+            Grammar.ValidateDigits(parts[1], false);
             if (!ulong.TryParse(parts[1], out sessionID))
             {
                 throw new SdpException("origin");
             }
             origin.SessionID = sessionID;
             ulong sessionVersion = 0;
+            Grammar.ValidateDigits(parts[2], false);
             if (!ulong.TryParse(parts[2], out sessionVersion))
             {
                 throw new SdpException("origin");
             }
             origin.SessionVersion = sessionVersion;
-            origin.NetworkType = parts[3];
-            origin.AddressType = parts[4];
-            origin.UnicastAddress = parts[5];
+            origin.SetAddress(parts[3], parts[4], parts[5]);
             return origin;
         }
     }

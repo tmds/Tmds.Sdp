@@ -24,7 +24,25 @@ namespace Tmds.Sdp
 {
     public class AttributeDictionary
     {
-        public SessionDescription SessionDescription { get; private set; }
+        private SessionDescription _sessionDescription;
+        public SessionDescription SessionDescription
+        {
+            get
+            {
+                if (Media != null)
+                {
+                    return Media.SessionDescription;
+                }
+                else
+                {
+                    return _sessionDescription;
+                }
+            }
+            internal set
+            {
+                _sessionDescription = value;
+            }
+        }
 
         public Media Media { get; private set; }
 
@@ -50,6 +68,11 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentNullException("name");
             }
+            Grammar.ValidateToken(name);
+            if (value != null)
+            {
+                Grammar.ValidateByteString(value);
+            }
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -63,6 +86,7 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentNullException("name");
             }
+            Grammar.ValidateToken(name);
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -75,6 +99,11 @@ namespace Tmds.Sdp
             if (name == null)
             {
                 throw new ArgumentNullException("name");
+            }
+            Grammar.ValidateToken(name);
+            if (value != null)
+            {
+                Grammar.ValidateByteString(value);
             }
             if (IsReadOnly)
             {
@@ -93,6 +122,7 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentNullException("name");
             }
+            Grammar.ValidateToken(name);
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -105,6 +135,14 @@ namespace Tmds.Sdp
             if (name == null)
             {
                 throw new ArgumentNullException("name");
+            }
+            Grammar.ValidateToken(name);
+            foreach (string value in values)
+            {
+                if (value != null)
+                {
+                    Grammar.ValidateByteString(value);
+                }
             }
             if (IsReadOnly)
             {
@@ -126,6 +164,7 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentNullException("name");
             }
+            Grammar.ValidateToken(name);
             foreach (var pair in _values)
             {
                 if (pair.Key.Equals(name))

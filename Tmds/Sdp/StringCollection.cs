@@ -32,6 +32,7 @@ namespace Tmds.Sdp
         }
         public StringCollection(Type type, SessionDescription sessionDescription)
         {
+            _type = type;
             SessionDescription = sessionDescription;
         }
         public SessionDescription SessionDescription { get; private set; }
@@ -48,6 +49,7 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentNullException("item");
             }
+            Validate(item);
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -60,6 +62,7 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentNullException("item");
             }
+            Validate(item);
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -82,5 +85,17 @@ namespace Tmds.Sdp
             }
             base.RemoveItem(index);
         }
+        private void Validate(string item)
+        {
+            if (_type == Type.EMail)
+            {
+                Grammar.ValidateEMail(item);
+            }
+            else if (_type == Type.Phone)
+            {
+                Grammar.ValidatePhoneNumber(item);
+            }
+        }
+        private Type _type;
     }
 }

@@ -158,6 +158,232 @@ namespace Tmds.Sdp
             }
         }
 
+        public void SetCategory(string value)
+        {
+            Set(Attribute.Category, value);
+        }
+        public string GetCategory()
+        {
+            string category;
+            TryGetValue(Attribute.Category, out category);
+            return category;
+        }
+        public void SetKeywords(string value)
+        {
+            Set(Attribute.Keywords, value);
+        }
+        public string GetKeywords()
+        {
+            string value;
+            TryGetValue(Attribute.Keywords, out value);
+            return value;
+        }
+        public void SetMaxPacketTime(TimeSpan value)
+        {
+            Set(Attribute.MaxPacketTime, ((int)value.TotalMilliseconds).ToString());
+        }
+        public TimeSpan? GetMaxPacketTime()
+        {
+            string value;
+            TryGetValue(Attribute.MaxPacketTime, out value);
+            if (value != null)
+            {
+                double time = 0;
+                if (double.TryParse(value, out time))
+                {
+                    return TimeSpan.FromMilliseconds(time);
+                }
+            }
+            return null;
+        }
+        public void SetPacketTime(TimeSpan value)
+        {
+            Set(Attribute.PacketTime, ((int)value.TotalMilliseconds).ToString());
+        }
+        public TimeSpan? GetPacketTime()
+        {
+            string value;
+            TryGetValue(Attribute.PacketTime, out value);
+            if (value != null)
+            {
+                double time = 0;
+                if (double.TryParse(value, out time))
+                {
+                    return TimeSpan.FromMilliseconds(time);
+                }
+            }
+            return null;
+        }
+        public void AddRtpEncoding(int pt, string encoding, int clockrate, string encodingParameters)
+        {
+            if (!string.IsNullOrEmpty(encodingParameters))
+            {
+                Add(Attribute.RtpEncoding, string.Format("{0} {1}/{2}/{3}", pt, encoding, clockrate, encodingParameters));
+            }
+            else
+            {
+                Add(Attribute.RtpEncoding, string.Format("{0} {1}/{2}", pt, encoding, clockrate));
+            }
+        }
+        public bool GetRtpEncoding(int pt, out string encoding, out int clockrate, out string encodingParameters)
+        {
+            var encodings = GetValues(Attribute.RtpEncoding);
+            string ptString = pt.ToString() + " ";
+            foreach (string enc in encodings)
+            {
+                if (enc.StartsWith(ptString))
+                {
+                    string[] parts = enc.Substring(ptString.Length).Split(new[] { '/' }, 3);
+                    if (parts.Length >= 2)
+                    {
+                        if (!int.TryParse(parts[1], out clockrate))
+                        {
+                            break;
+                        }
+                        encoding = parts[0];
+                        if (parts.Length == 3)
+                        {
+                            encodingParameters = parts[1];
+                        }
+                        else
+                        {
+                            encodingParameters = null;
+                        }
+                        return true;
+                    }
+                }
+            }
+            encoding = null;
+            clockrate = 0;
+            encodingParameters = null;
+            return false;
+        }
+        public void SetSendReceive(bool send, bool receive)
+        {
+            Remove(Attribute.SendReceive);
+            Remove(Attribute.SendOnly);
+            Remove(Attribute.ReceiveOnly);
+            if (send && receive)
+            {
+                Add(Attribute.SendReceive);
+            }
+            else if (send)
+            {
+                Add(Attribute.SendOnly);
+            }
+            else if (receive)
+            {
+                Add(Attribute.ReceiveOnly);
+            }
+        }
+        public void GetSendReceive(out bool send, out bool receive)
+        {
+            send = true;
+            receive = true;
+            if (ContainsKey(Attribute.SendOnly))
+            {
+                receive = false;
+            }
+            if (ContainsKey(Attribute.ReceiveOnly))
+            {
+                send = false;
+            }
+        }
+        public void SetInactive(bool value)
+        {
+            if (value)
+            {
+                Set(Attribute.Inactive);
+            }
+            else
+            {
+                Remove(Attribute.Inactive);
+            }
+        }
+        public bool GetInactive()
+        {
+            return ContainsKey(Attribute.Inactive);
+        }
+        public void SetOrientation(string value)
+        {
+            Set(Attribute.Orientation, value);
+        }
+        public string GetOrientation()
+        {
+            string value;
+            TryGetValue(Attribute.ConferenceType, out value);
+            return value;
+        }
+        public void SetConferenceType(string value)
+        {
+            Set(Attribute.Orientation, value);
+        }
+        public string GetConferenceType()
+        {
+            string value;
+            TryGetValue(Attribute.ConferenceType, out value);
+            return value;
+        }
+        public void SetFramerate(double value)
+        {
+            Set(Attribute.Framerate, value.ToString());
+        }
+        public double? GetFramerate()
+        {
+            string value;
+            TryGetValue(Attribute.Framerate, out value);
+            if (value != null)
+            {
+                double fr = 0;
+                if (double.TryParse(value, out fr))
+                {
+                    return fr;
+                }
+            }
+            return null;
+        }
+        public void SetQuality(int value)
+        {
+            if (value < AttributeValue.QualityWorst || value > AttributeValue.QualityBest)
+            {
+                throw new ArgumentException("quality should be between 0 and 10");
+            }
+            Set(Attribute.Quality, value.ToString());
+        }
+        public int? GetQuality()
+        {
+            string value;
+            TryGetValue(Attribute.Quality, out value);
+            if (value != null)
+            {
+                int q = 0;
+                if (int.TryParse(value, out q))
+                {
+                    return q;
+                }
+            }
+            return null;
+        }
+        public void AddFormatParameters(string format, string formatParameters)
+        {
+            Add(Attribute.FormatParameters, string.Format("{0} {1}", format, formatParameters));
+        }
+        public bool GetFormatParameters(string format, out string formatParameters)
+        {
+            var formats = GetValues(Attribute.FormatParameters);
+            string formatString = format + " ";
+            foreach (string frmt in formats)
+            {
+                if (frmt.StartsWith(formatString))
+                {
+                    formatParameters = frmt.Substring(formatString.Length);
+                    return true;
+                }
+            }
+            formatParameters = null;
+            return false;
+        }
+
         public bool ContainsKey(string name)
         {
             if (name == null)

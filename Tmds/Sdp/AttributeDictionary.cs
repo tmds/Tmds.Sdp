@@ -225,6 +225,10 @@ namespace Tmds.Sdp
                 Add(Attribute.RtpEncoding, string.Format("{0} {1}/{2}", pt, encoding, clockrate));
             }
         }
+        public void AddRtpEncoding(int pt, string encoding, int clockrate)
+        {
+            AddRtpEncoding(pt, encoding, clockrate, null);
+        }
         public bool GetRtpEncoding(int pt, out string encoding, out int clockrate, out string encodingParameters)
         {
             var encodings = GetValues(Attribute.RtpEncoding);
@@ -257,6 +261,11 @@ namespace Tmds.Sdp
             clockrate = 0;
             encodingParameters = null;
             return false;
+        }
+        public bool GetRtpEncoding(int pt, out string encoding, out int clockrate)
+        {
+            string encodingParameters;
+            return GetRtpEncoding(pt, out encoding, out clockrate, out encodingParameters);
         }
         public void SetSendReceive(bool send, bool receive)
         {
@@ -368,7 +377,7 @@ namespace Tmds.Sdp
         {
             Add(Attribute.FormatParameters, string.Format("{0} {1}", format, formatParameters));
         }
-        public bool GetFormatParameters(string format, out string formatParameters)
+        public string GetFormatParameters(string format)
         {
             var formats = GetValues(Attribute.FormatParameters);
             string formatString = format + " ";
@@ -376,12 +385,56 @@ namespace Tmds.Sdp
             {
                 if (frmt.StartsWith(formatString))
                 {
-                    formatParameters = frmt.Substring(formatString.Length);
-                    return true;
+                    return frmt.Substring(formatString.Length);
                 }
             }
-            formatParameters = null;
-            return false;
+            return null;
+        }
+        public IDictionary<string, string> GetFormatParameterDictionary(string format)
+        {
+            string formatParameters = GetFormatParameters(format);
+            if (formatParameters == null)
+            {
+                return null;
+            }
+            Dictionary<string, string> retval = new Dictionary<string, string>();
+            string[] pairs = formatParameters.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string pair in pairs)
+            {
+                string[] parts = pair.Split('=');
+                if (parts.Length > 2)
+                {
+                    return null;
+                }
+                if (parts.Length == 1)
+                {
+                    retval.Add(parts[0], null);
+                }
+                else
+                {
+                    retval.Add(parts[0].Trim(), parts[1].Trim());
+                }
+            }
+            return retval;
+        }
+        public void AddFormatParameters(string format, IDictionary<string, string> formatParameters)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var pair in formatParameters)
+            {
+                sb.Append(pair.Key);
+                if (pair.Value != null)
+                {
+                    sb.Append('=');
+                    sb.Append(pair.Value);
+                }
+                sb.Append(';');
+            }
+            if (sb.Length != 0)
+            {
+                sb.Remove(sb.Length - 1, 1);
+            }
+            AddFormatParameters(format, sb.ToString());
         }
 
         public bool ContainsKey(string name)

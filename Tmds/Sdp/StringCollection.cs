@@ -28,19 +28,46 @@ namespace Tmds.Sdp
         public enum Type
         {
             Phone,
-            EMail
+            EMail,
+            Format
         }
         public StringCollection(Type type, SessionDescription sessionDescription)
         {
             _type = type;
             SessionDescription = sessionDescription;
         }
+        public StringCollection(Type type, Media media, IEnumerable<string> formats)
+        {
+            if (type != Type.Format)
+            {
+                throw new Exception("Invalid Type for this constructor");
+            }
+            _type = type;
+            Media = media;
+            foreach (string format in formats)
+            {
+                Add(format);
+            }
+            if (Count == 0)
+            {
+                throw new ArgumentException("Formats cannot be empty");
+            }
+        }
         public SessionDescription SessionDescription { get; private set; }
+        public Media Media { get; private set; }
         public bool IsReadOnly
         {
             get
             {
-                return SessionDescription.IsReadOnly;
+                if (SessionDescription != null && SessionDescription.IsReadOnly)
+                {
+                    return true;
+                }
+                if (Media != null && Media.IsReadOnly)
+                {
+                    return true;
+                }
+                return false;
             }
         }
         protected override void InsertItem(int index, string item)
@@ -75,6 +102,10 @@ namespace Tmds.Sdp
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
             }
+            if (_type == Type.Format)
+            {
+                throw new InvalidCastException("Formats cannot be empty");
+            }
             base.ClearItems();
         }
         protected override void RemoveItem(int index)
@@ -82,6 +113,10 @@ namespace Tmds.Sdp
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
+            }
+            if (Count == 1)
+            {
+                throw new InvalidCastException("Formats cannot be empty");
             }
             base.RemoveItem(index);
         }
@@ -94,6 +129,10 @@ namespace Tmds.Sdp
             else if (_type == Type.Phone)
             {
                 Grammar.ValidatePhoneNumber(item);
+            }
+            else if (_type == Type.Format)
+            {
+                Grammar.ValidateToken(item);
             }
         }
         private Type _type;

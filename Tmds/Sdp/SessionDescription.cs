@@ -636,40 +636,35 @@ namespace Tmds.Sdp
                             sd.Times.Add(new Time(startDateTime, stopDateTime));
                             break;
                         case 'm':
-                            media = new Media();
-
                             parts = value.Split(' ');
-                            if (parts.Length != 4)
+                            if (parts.Length < 4)
                             {
                                 goto invalidline;
                             }
-                            media.Type = parts[0];
-                            media.Protocol = parts[2];
-                            media.Format = parts[3];
-
+                            string mediaType = parts[0];
+                            string protocol = parts[2];
+                            var formats = parts.Skip(3).ToList();
                             parts = parts[1].Split('/');
                             if (parts.Length > 2)
                             {
                                 goto invalidline;
                             }
                             uint port = 0;
-                            media.PortCount = 1;
+                            uint portCount = 1;
                             Grammar.ValidateDigits(parts[0], false);
                             if (!uint.TryParse(parts[0], out port))
                             {
                                 goto invalidline;
                             }
-                            media.Port = port;
                             if (parts.Length == 2)
                             {
-                                uint portCount = 0;
                                 Grammar.ValidateDigits(parts[1], true);
                                 if (!uint.TryParse(parts[1], out portCount))
                                 {
                                     goto invalidline;
                                 }
-                                media.PortCount = portCount;
                             }
+                            media = new Media(mediaType, port, portCount, protocol, formats);
                             sd.Medias.Add(media);
                             break;
                         case 'z':
@@ -831,8 +826,11 @@ namespace Tmds.Sdp
                 }
                 sb.Append(' ');
                 sb.Append(media.Protocol);
-                sb.Append(' ');
-                sb.Append(media.Format);
+                foreach (string format in media.Formats)
+                {
+                    sb.Append(' ');
+                    sb.Append(format);
+                }
                 sb.Append("\r\n");
 
                 if (media.Information != null)

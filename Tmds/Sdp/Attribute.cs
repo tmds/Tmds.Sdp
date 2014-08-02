@@ -24,23 +24,23 @@ namespace Tmds.Sdp
 {
     class Attribute
     {
-        public const string Category = "cat"; // string
-        public const string Keywords = "keywds"; // string
-        public const string PacketTime = "ptime"; // time in milliseconds
-        public const string MaxPacketTime = "maxptime"; // time in milliseconds
-        public const string RtpEncoding = "rtpmap"; // <pt> <encoding>/<clockrate>[/encoding params]
-        public const string ReceiveOnly = "recvonly"; // (bool)
-        public const string SendReceive = "sendrecv"; // (bool)
-        public const string SendOnly = "sendonly"; // (bool)
-        public const string Inactive = "inactive"; // (bool)
-        public const string Orientation = "orient"; // portrait/landscape/seascape
-        public const string ConferenceType = "type"; // broadcast/meeting/moderated/test/H332
-        public const string CharacterSet = "charset"; // IANA registered character set identifier
-        public const string SdpLanguage = "sdplang"; // rfc3066 tag
-        public const string Language = "lang"; // rfc3066 tag
-        public const string Framerate = "framerate"; // <integer>.<fraction>
-        public const string Quality = "quality"; // 0-10
-        public const string FormatParameters = "fmtp"; // format + format specific parameters
+        public const string Category = "cat";
+        public const string Keywords = "keywds";
+        public const string PacketTime = "ptime";
+        public const string MaxPacketTime = "maxptime";
+        public const string RtpEncoding = "rtpmap";
+        public const string ReceiveOnly = "recvonly";
+        public const string SendReceive = "sendrecv";
+        public const string SendOnly = "sendonly";
+        public const string Inactive = "inactive";
+        public const string Orientation = "orient";
+        public const string ConferenceType = "type";
+        public const string CharacterSet = "charset";
+        public const string SdpLanguage = "sdplang";
+        public const string Language = "lang";
+        public const string Framerate = "framerate";
+        public const string Quality = "quality";
+        public const string FormatParameters = "fmtp";
     }
     class AttributeValue
     {
@@ -48,11 +48,11 @@ namespace Tmds.Sdp
         public const string OrientationLandscape = "landscape";
         public const string OrientationSeascape = "seascape";
 
-        public const string ConferenceBroadcast = "broadcast";
-        public const string ConferenceMeeting = "meeting";
-        public const string ConferenceModerated = "moderated";
-        public const string ConferenceTest = "test";
-        public const string ConferenceH332 = "H332";
+        public const string ConferenceTypeBroadcast = "broadcast";
+        public const string ConferenceTypeMeeting = "meeting";
+        public const string ConferenceTypeModerated = "moderated";
+        public const string ConferenceTypeTest = "test";
+        public const string ConferenceTypeH332 = "H332";
 
         public const int QualityBest = 10;
         public const int QualityDefault = 5;

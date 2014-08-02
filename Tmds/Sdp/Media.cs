@@ -36,7 +36,7 @@ namespace Tmds.Sdp
         public const string ProtocolRtpSavp = "RTP/SAVP";
         public static readonly string[] MediaProtocols = null;
 
-        public Media(string type, uint port, uint portCount, string protocol, string format)
+        public Media(string type, uint port, uint portCount, string protocol, IEnumerable<string> formats)
         {
             if (string.IsNullOrEmpty(type))
             {
@@ -46,16 +46,16 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentException("protocol");
             }
-            if (string.IsNullOrEmpty(format))
+            if (formats == null)
             {
-                throw new ArgumentException("format");
+                throw new ArgumentNullException("formats");
             }
 
             Type = type;
             Port = port;
             PortCount = portCount;
             Protocol = protocol;
-            Format = format;
+            _formats = new StringCollection(StringCollection.Type.Format, this, formats);
         }
 
         public bool IsReadOnly
@@ -147,25 +147,12 @@ namespace Tmds.Sdp
                 _protocol = value;
             }
         }
-        private string _format;
-        public string Format
+        private StringCollection _formats;
+        public ICollection<string> Formats
         {
             get
             {
-                return _format;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ArgumentException("value");
-                }
-                Grammar.ValidateToken(value);
-                if (IsReadOnly)
-                {
-                    throw new InvalidOperationException("SessionDescription is read-only");
-                }
-                _format = value;
+                return _formats;
             }
         }
         private string _information;
@@ -247,9 +234,6 @@ namespace Tmds.Sdp
                 return _attributes;
             }
         }
-
-        internal Media()
-        { }
 
         static Media()
         {

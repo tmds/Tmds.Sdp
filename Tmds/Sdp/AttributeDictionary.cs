@@ -297,6 +297,16 @@ namespace Tmds.Sdp
             {
                 send = false;
             }
+            else if (ContainsKey(Attribute.SendReceive))
+            {}
+            else
+            {
+                if ((GetConferenceType() == AttributeValue.ConferenceTypeBroadcast) || 
+                    (GetConferenceType() == AttributeValue.ConferenceTypeH332))
+                {
+                    send = false;
+                }
+            }
         }
         public void SetInactive(bool value)
         {

@@ -30,8 +30,8 @@ namespace Tmds.Sdp
         public string Name { get { return Information.Name; } }
         public string Description { get { return Information.Description; } }
         public string Id { get { return Information.Id; } }
-        public int Index { get; private set; }
-        static private int NextIndex = 1;
+        public int IPv4Index { get; private set; }
+        public int IPv6Index { get; private set; }
 
         public override bool Equals(object obj)
         {
@@ -64,10 +64,9 @@ namespace Tmds.Sdp
             Index = Interlocked.Increment(ref NextIndex);
         }
 
+        internal int Index { get; private set; }
         internal NetworkInterfaceInformation Information { get; private set; }
 
-        public int IPv4Index { get; private set; }
-
-        public long IPv6Index { get; private set; }
+        static private int NextIndex = 1;
     }
 }

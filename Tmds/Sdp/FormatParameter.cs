@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace Tmds.Sdp
 {
-    class Parameter
+    public class FormatParameter
     {
         public const string Config = "config";
         public const string Bitrate = "bitrate";
@@ -34,7 +34,7 @@ namespace Tmds.Sdp
         public const string Depth = "depth";
         public const string Interlace = "interlace";
     }
-    class ParameterValue
+    public class FormatParameterValue
     {
         public const string SamplingRGB = "RGB";
         public const string SamplingBGR = "BGR";

@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace Tmds.Sdp
 {
-    class Attribute
+    public class Attribute
     {
         public const string Category = "cat";
         public const string Keywords = "keywds";
@@ -41,8 +41,9 @@ namespace Tmds.Sdp
         public const string Framerate = "framerate";
         public const string Quality = "quality";
         public const string FormatParameters = "fmtp";
+        public const string Label = "label";
     }
-    class AttributeValue
+    public class AttributeValue
     {
         public const string OrientationPortrait = "portrait";
         public const string OrientationLandscape = "landscape";

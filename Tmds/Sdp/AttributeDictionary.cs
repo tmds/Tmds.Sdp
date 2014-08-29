@@ -168,6 +168,12 @@ namespace Tmds.Sdp
             TryGetValue(Attribute.Category, out category);
             return category;
         }
+        public string GetLabel()
+        {
+            string format;
+            TryGetValue(Attribute.Label, out format);
+            return format;
+        }
         public void SetKeywords(string value)
         {
             Set(Attribute.Keywords, value);

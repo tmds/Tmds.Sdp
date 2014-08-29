@@ -68,8 +68,6 @@ namespace Tmds.Sdp
             SynchronizationContext = synchronizationContext;
 
             _interfaceHandlers = new Dictionary<int, NetworkInterfaceHandler>();
-
-            NetworkInterfaceInformation[] interfaceInfos = NetworkInterfaceInformation.GetAllNetworkInterfaces();
             NetworkChange.NetworkAddressChanged += CheckNetworkInterfaceStatuses;
             CheckNetworkInterfaceStatuses(null, null);
         }

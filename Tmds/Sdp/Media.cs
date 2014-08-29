@@ -148,7 +148,7 @@ namespace Tmds.Sdp
             }
         }
         private StringCollection _formats;
-        public ICollection<string> Formats
+        public IList<string> Formats
         {
             get
             {

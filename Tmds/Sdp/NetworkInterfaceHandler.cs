@@ -48,7 +48,6 @@ namespace Tmds.Sdp
 
             lock (this)
             {
-
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, IPAddress.HostToNetworkOrder(_index));
@@ -121,13 +120,13 @@ namespace Tmds.Sdp
                     }
                     else
                     {
-                        string origin = Encoding.ASCII.GetString(announcement.Payload.Array, announcement.Payload.Offset + 2, announcement.Payload.Count - 4);
+                        string origin = Encoding.UTF8.GetString(announcement.Payload.Array, announcement.Payload.Offset + 2, announcement.Payload.Count - 4);
                         SapClient.OnSessionDelete(this, Origin.Parse(origin));
                     }
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Exception while receiving SAP/SDP: " + e.Message);
+                    SapClient.OnException(e);
                 }
 
                 StartReceive();
@@ -179,11 +178,21 @@ namespace Tmds.Sdp
 
             sr.Skip(authenticationLength);
 
+            long position = sr.BaseStream.Position;
+
             StringBuilder sb = new StringBuilder();
             b = sr.ReadByte();
             while (b != 0)
             {
                 sb.Append((char)b);
+                if ((sb.Length == 2) && (sb.ToString() == "v="))
+                {
+                    // SAPv1
+                    sb.Clear();
+                    sb.Append("application/sdp");
+                    sr.BaseStream.Seek(position, SeekOrigin.Begin);
+                    break;
+                }
                 b = sr.ReadByte();
             }
 

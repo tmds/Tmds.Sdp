@@ -50,6 +50,10 @@ namespace Tmds.Sdp
         public TimeSpan DefaultTimeOut { get; set; }
         public AnnouncedSessionCollection Sessions { get; private set; }
 
+        public delegate void ExceptionEventHandler(Object sender, ExceptionEventArgs e);
+
+        public event ExceptionEventHandler Exception;
+
         public void Enable(SynchronizationContext synchronizationContext)
         {
             lock (_sessionData)
@@ -185,6 +189,17 @@ namespace Tmds.Sdp
                     });
                 }
             }
+        }
+
+        internal void OnException(Exception e)
+        {
+            SynchronizationContextPost(o =>
+            {
+                if (Exception != null)
+                {
+                    Exception(this, new ExceptionEventArgs(e));
+                }
+            });
         }
 
         private class SessionData

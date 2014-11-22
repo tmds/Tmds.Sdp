@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -110,6 +111,16 @@ namespace Tmds.Sdp
                 {
                     var stream = new MemoryStream(_buffer, 0, length, false, true);
                     Announcement announcement = ReadAnnouncement(stream);
+
+                    if (announcement.IsCompressed)
+                    {
+                        stream = new MemoryStream(_buffer, announcement.Payload.Offset, announcement.Payload.Count);
+                        DeflateStream deflateStream = new DeflateStream(stream, CompressionMode.Decompress);
+                        stream = new MemoryStream();
+                        deflateStream.CopyTo(stream);
+                        announcement.IsCompressed = false;
+                        announcement.Payload = new ArraySegment<byte>(stream.GetBuffer(), 0, (int)stream.Length);
+                    }
 
                     if (announcement.Type == MessageType.Announcement)
                     {

@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tmds\Sdp\Attribute.cs" />
+    <Compile Include="Tmds\Sdp\ExceptionEventArgs.cs" />
     <Compile Include="Tmds\Sdp\FormatParameter.cs" />
     <Compile Include="Tmds\Sdp\Grammar.cs" />
     <Compile Include="Tmds\Sdp\RtpEncoding.cs" />

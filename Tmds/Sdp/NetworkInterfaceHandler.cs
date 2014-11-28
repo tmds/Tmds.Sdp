@@ -114,7 +114,7 @@ namespace Tmds.Sdp
 
                     if (announcement.IsCompressed)
                     {
-                        stream = new MemoryStream(_buffer, announcement.Payload.Offset, announcement.Payload.Count);
+                        stream = new MemoryStream(_buffer, announcement.Payload.Offset + 2, announcement.Payload.Count - 2);
                         DeflateStream deflateStream = new DeflateStream(stream, CompressionMode.Decompress);
                         stream = new MemoryStream();
                         deflateStream.CopyTo(stream);
@@ -124,7 +124,7 @@ namespace Tmds.Sdp
 
                     if (announcement.Type == MessageType.Announcement)
                     {
-                        stream = new MemoryStream(_buffer, announcement.Payload.Offset, announcement.Payload.Count);
+                        stream = new MemoryStream(announcement.Payload.Array, announcement.Payload.Offset, announcement.Payload.Count);
                         SessionDescription description = SessionDescription.Load(stream);
                         description.SetReadOnly();
                         SapClient.OnSessionAnnounce(this, description);

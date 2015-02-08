@@ -17,7 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
@@ -42,6 +44,7 @@ namespace Tmds.Sdp
         {
             DefaultTimeOut = TimeSpan.FromHours(1);
             _sessionData = new Dictionary<SdpSession, SessionData>();
+            _announcements = new Dictionary<AnnouncementIdentifier, SessionData>();
             Sessions = new AnnouncedSessionCollection();
         }
 
@@ -88,51 +91,66 @@ namespace Tmds.Sdp
             }
         }
 
-        internal void OnSessionAnnounce(NetworkInterfaceHandler interfaceHandler, SessionDescription sd)
+        internal void OnSessionAnnounce(NetworkInterfaceHandler interfaceHandler, Announcement announcement)
         {
             lock (_sessionData)
             {
-                SdpSession session = new SdpSession(sd, interfaceHandler.NetworkInterface);
+                AnnouncementIdentifier id = new AnnouncementIdentifier(interfaceHandler.NetworkInterface, announcement);
                 SessionData sessionData = null;
-                SessionAnnouncement sessionAnnouncement = null;
-                if (_sessionData.TryGetValue(session, out sessionData))
-                {
-                    sessionAnnouncement = sessionData.Session;
-                }
 
-                if (sessionData != null)
+                bool knownAnnouncement = _announcements.TryGetValue(id, out sessionData);
+                if (!knownAnnouncement)
                 {
-                    if (sd.IsUpdateOf(sessionAnnouncement.SessionDescription))
+                    announcement.Decompress();
+
+                    Stream stream = new MemoryStream(announcement.Payload.Array, announcement.Payload.Offset, announcement.Payload.Count);
+                    SessionDescription description = SessionDescription.Load(stream);
+                    description.SetReadOnly();
+
+                    SdpSession session = new SdpSession(description, interfaceHandler.NetworkInterface);
+                    SessionAnnouncement sessionAnnouncement = null;
+                    if (_sessionData.TryGetValue(session, out sessionData))
                     {
-                        sessionAnnouncement = new SessionAnnouncement(sd, interfaceHandler.NetworkInterface);
-                        SessionAnnouncement oldAnnouncement = sessionData.Session;
-                        sessionData.Session = sessionAnnouncement;
+                        sessionAnnouncement = sessionData.Session;
+                    }
+
+                    if (sessionData != null)
+                    {
+                        if (description.IsUpdateOf(sessionAnnouncement.SessionDescription))
+                        {
+                            sessionAnnouncement = new SessionAnnouncement(description, interfaceHandler.NetworkInterface);
+                            SessionAnnouncement oldAnnouncement = sessionData.Session;
+                            sessionData.Session = sessionAnnouncement;
+                            _announcements.Remove(sessionData.Id);
+                            sessionData.Id = id;
+                            SynchronizationContextPost(o =>
+                            {
+                                lock (Sessions)
+                                {
+                                    Sessions.Replace(oldAnnouncement, sessionAnnouncement);
+                                }
+                            });
+                        }
+                    }
+                    else
+                    {
+                        sessionAnnouncement = new SessionAnnouncement(description, interfaceHandler.NetworkInterface);
+                        sessionData = new SessionData()
+                        {
+                            Session = sessionAnnouncement,
+                            Timer = new Timer(OnTimeOut, session, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite),
+                            Id = id
+                        };
+                        _sessionData.Add(session, sessionData);
+                        _announcements.Add(id, sessionData);
                         SynchronizationContextPost(o =>
                         {
                             lock (Sessions)
                             {
-                                Sessions.Replace(oldAnnouncement, sessionAnnouncement);
+                                Sessions.Add(sessionAnnouncement);
                             }
                         });
                     }
-
-                }
-                else
-                {
-                    sessionAnnouncement = new SessionAnnouncement(sd, interfaceHandler.NetworkInterface);
-                    sessionData = new SessionData()
-                    {
-                        Session = sessionAnnouncement,
-                        Timer = new Timer(OnTimeOut, session, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite)
-                    };
-                    _sessionData.Add(session, sessionData);
-                    SynchronizationContextPost(o =>
-                    {
-                        lock (Sessions)
-                        {
-                            Sessions.Add(sessionAnnouncement);
-                        }
-                    });
                 }
                 sessionData.TimeOutTime = DateTime.Now + DefaultTimeOut;
                 sessionData.Timer.Change(DefaultTimeOut, TimeSpan.FromMilliseconds(-1));
@@ -157,6 +175,7 @@ namespace Tmds.Sdp
                     {
                         sessionData.Timer.Dispose();
                         _sessionData.Remove(session);
+                        _announcements.Remove(sessionData.Id);
                         SynchronizationContextPost(o =>
                         {
                             lock (Sessions)
@@ -180,6 +199,7 @@ namespace Tmds.Sdp
                     SessionData sessionData = pair.Value;
                     sessionData.Timer.Dispose();
                     _sessionData.Remove(session);
+                    _announcements.Remove(sessionData.Id);
                     SynchronizationContextPost(o =>
                     {
                         lock (Sessions)
@@ -202,11 +222,49 @@ namespace Tmds.Sdp
             });
         }
 
+        private class AnnouncementIdentifier
+        {
+            public AnnouncementIdentifier(NetworkInterface inter, Announcement announcement)
+            {
+                _interface = inter.Index;
+                _address = announcement.Source;
+                _hash = announcement.Hash;
+            }
+            public override bool Equals(object obj)
+            {
+                AnnouncementIdentifier other = obj as AnnouncementIdentifier;
+
+                if (other == null)
+                {
+                    return false;
+                }
+
+                return (other._interface == this._interface) &&
+                       (other._address == this._address) &&
+                       (other._hash == this._hash);
+            }
+            public override int GetHashCode()
+            {
+                int h1 = _interface.GetHashCode();
+                int h2 = _address.GetHashCode();
+                int h3 = _hash.GetHashCode();
+                int hash = 17;
+                hash = hash * 31 + h1;
+                hash = hash * 31 + h2;
+                hash = hash * 31 + h3;
+                return hash;
+            }
+            private int _interface;
+            private IPAddress _address;
+            private ushort _hash;
+        }
+
         private class SessionData
         {
             public DateTime TimeOutTime;
             public Timer Timer;
             public SessionAnnouncement Session;
+            public AnnouncementIdentifier Id;
         }
 
         private void SynchronizationContextPost(SendOrPostCallback cb)
@@ -236,6 +294,7 @@ namespace Tmds.Sdp
                     }
                     sessionData.Timer.Dispose();
                     _sessionData.Remove(session);
+                    _announcements.Remove(sessionData.Id);
                     SynchronizationContextPost(o =>
                     {
                         lock (Sessions)
@@ -290,7 +349,8 @@ namespace Tmds.Sdp
             }
         }
 
-        private Dictionary<int, NetworkInterfaceHandler> _interfaceHandlers;
-        private Dictionary<SdpSession, SessionData> _sessionData;
+        private Dictionary<int, NetworkInterfaceHandler>        _interfaceHandlers;
+        private Dictionary<SdpSession, SessionData>             _sessionData;
+        private Dictionary<AnnouncementIdentifier, SessionData> _announcements;
     }
 }

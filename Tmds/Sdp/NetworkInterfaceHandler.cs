@@ -83,12 +83,6 @@ namespace Tmds.Sdp
             _socket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, OnReceive, null);
         }
 
-        private enum MessageType
-        {
-            Announcement,
-            Deletion
-        }
-
         private void OnReceive(IAsyncResult ar)
         {
             lock (this)
@@ -112,25 +106,13 @@ namespace Tmds.Sdp
                     var stream = new MemoryStream(_buffer, 0, length, false, true);
                     Announcement announcement = ReadAnnouncement(stream);
 
-                    if (announcement.IsCompressed)
+                    if (announcement.Type == Announcement.MessageType.Announcement)
                     {
-                        stream = new MemoryStream(_buffer, announcement.Payload.Offset + 2, announcement.Payload.Count - 2);
-                        DeflateStream deflateStream = new DeflateStream(stream, CompressionMode.Decompress);
-                        stream = new MemoryStream();
-                        deflateStream.CopyTo(stream);
-                        announcement.IsCompressed = false;
-                        announcement.Payload = new ArraySegment<byte>(stream.GetBuffer(), 0, (int)stream.Length);
-                    }
-
-                    if (announcement.Type == MessageType.Announcement)
-                    {
-                        stream = new MemoryStream(announcement.Payload.Array, announcement.Payload.Offset, announcement.Payload.Count);
-                        SessionDescription description = SessionDescription.Load(stream);
-                        description.SetReadOnly();
-                        SapClient.OnSessionAnnounce(this, description);
+                        SapClient.OnSessionAnnounce(this, announcement);
                     }
                     else
                     {
+                        announcement.Decompress();
                         string origin = Encoding.UTF8.GetString(announcement.Payload.Array, announcement.Payload.Offset + 2, announcement.Payload.Count - 4);
                         SapClient.OnSessionDelete(this, Origin.Parse(origin));
                     }
@@ -144,19 +126,6 @@ namespace Tmds.Sdp
             }
         }
 
-        class Announcement
-        {
-            public byte Version { get; set; }
-            public MessageType Type { get; set; }
-            public bool IsEncrypted { get; set; }
-            public bool IsCompressed { get; set; }
-            public ArraySegment<byte> AuthenticationData { get; set; }
-            public ushort Hash { get; set; }
-            public IPAddress Source { get; set; }
-            public string PayloadType { get; set; }
-            public ArraySegment<byte> Payload { get; set; }
-        }
-
         private Announcement ReadAnnouncement(MemoryStream stream)
         {
             Announcement announcement = new Announcement();
@@ -167,7 +136,7 @@ namespace Tmds.Sdp
 
             announcement.Version = (byte)(b & 0xE0);
             bool IPv6 = (b & (1 << 4)) != 0;
-            announcement.Type = (b & (1 << 2)) != 0 ? MessageType.Deletion : MessageType.Announcement;
+            announcement.Type = (b & (1 << 2)) != 0 ? Announcement.MessageType.Deletion : Announcement.MessageType.Announcement;
             announcement.IsEncrypted = (b & (1 << 1)) != 0;
             announcement.IsCompressed = (b & (1 << 0)) != 0;
 

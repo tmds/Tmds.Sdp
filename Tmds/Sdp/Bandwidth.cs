@@ -65,7 +65,7 @@ namespace Tmds.Sdp
                 {
                     return false;
                 }
-                return true;
+                return Grammar.IsValidToken(Type);
             }
         }
 

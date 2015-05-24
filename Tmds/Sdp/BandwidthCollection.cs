@@ -71,13 +71,78 @@ namespace Tmds.Sdp
             }
         }
 
+        public uint? GetConferenceTotal()
+        {
+            uint? retval;
+            TryGetValue(Bandwidth.TypeConferenceTotal, out retval);
+            return retval;
+        }
+
+        public uint? GetApplicationSpecific()
+        {
+            uint? retval;
+            TryGetValue(Bandwidth.TypeApplicationSpecific, out retval);
+            return retval;
+        }
+
+        public void SetConferenceTotal(uint value)
+        {
+            Set(Bandwidth.TypeConferenceTotal, value);
+        }
+
+        public void SetApplicationSpecific(uint value)
+        {
+            Set(Bandwidth.TypeApplicationSpecific, value);
+        }
+
+        public bool TryGetValue(string type, out uint? value)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+            var bandwidths = this.Where(bw => bw.Type == type).ToList();
+            if (bandwidths.Count == 1)
+            {
+                value = bandwidths[0].Value;
+                return true;
+            }
+            else
+            {
+                value = null;
+                return false;
+            }
+        }
+
+        public bool ContainsType(string type)
+        {
+            return this.Where(bw => bw.Type == type).Any();
+        }
+
+        public void Set(string type, uint value)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+            Bandwidth bandwidth = new Bandwidth(type, value);
+            if (IsReadOnly)
+            {
+                throw new InvalidOperationException("SessionDescription is read-only");
+            }
+            if (ContainsType(type))
+            {
+                throw new ArgumentException("An element with the same type already exists");
+            }
+            Add(bandwidth);
+        }
+
         protected override void InsertItem(int index, Bandwidth item)
         {
             if (!item.IsValid)
             {
                 throw new ArgumentException("item");
             }
-            Validate(item);
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -90,7 +155,6 @@ namespace Tmds.Sdp
             {
                 throw new ArgumentException("item");
             }
-            Validate(item);
             if (IsReadOnly)
             {
                 throw new InvalidOperationException("SessionDescription is read-only");
@@ -112,10 +176,6 @@ namespace Tmds.Sdp
                 throw new InvalidOperationException("SessionDescription is read-only");
             }
             base.RemoveItem(index);
-        }
-        private void Validate(Bandwidth item)
-        {
-            Grammar.ValidateToken(item.Type);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Tmds.Sdp
 {
     public struct Time
     {
-        public static DateTime Zero = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        public static readonly DateTime Zero = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public Time(DateTime startTime, DateTime stopTime)
             : this()

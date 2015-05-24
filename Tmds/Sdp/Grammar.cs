@@ -57,7 +57,7 @@ namespace Tmds.Sdp
             }
             throw new SdpException("Invalid non-ws-string: '" + s + "'");
         }
-        public static void ValidateToken(string s)
+        public static bool IsValidToken(string s)
         {
             if (s.Length != 0)
             {
@@ -70,8 +70,16 @@ namespace Tmds.Sdp
                                ((c >= (char)0x5e) && (c <= (char)0x7e))
                     ))
                 {
-                    return;
-                }  
+                    return true;
+                }
+            }
+            return false;
+        }
+        public static void ValidateToken(string s)
+        {
+            if (IsValidToken(s))
+            {
+                return;
             }
             throw new SdpException("Invalid token: '" + s + "'");
         }

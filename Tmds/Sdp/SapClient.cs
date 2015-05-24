@@ -49,7 +49,6 @@ namespace Tmds.Sdp
         }
 
         public bool IsEnabled { get; private set; }
-        public SynchronizationContext SynchronizationContext { get; private set; }
         public TimeSpan DefaultTimeOut { get; set; }
         public AnnouncedSessionCollection Sessions { get; private set; }
 
@@ -63,7 +62,7 @@ namespace Tmds.Sdp
             {
                 if (IsEnabled)
                 {
-                    if ((synchronizationContext != null) && (SynchronizationContext != synchronizationContext))
+                    if ((synchronizationContext != null) && (_synchronizationContext != synchronizationContext))
                     {
                         throw new Exception("Cannot use two different SynchronizationContexts");
                     }
@@ -72,7 +71,7 @@ namespace Tmds.Sdp
                 IsEnabled = true;
             }
 
-            SynchronizationContext = synchronizationContext;
+            _synchronizationContext = synchronizationContext;
 
             _interfaceHandlers = new Dictionary<int, NetworkInterfaceHandler>();
             NetworkChange.NetworkAddressChanged += CheckNetworkInterfaceStatuses;
@@ -269,9 +268,9 @@ namespace Tmds.Sdp
 
         private void SynchronizationContextPost(SendOrPostCallback cb)
         {
-            if (SynchronizationContext != null)
+            if (_synchronizationContext != null)
             {
-                SynchronizationContext.Post(cb, null);
+                _synchronizationContext.Post(cb, null);
             }
             else
             {
@@ -352,5 +351,6 @@ namespace Tmds.Sdp
         private Dictionary<int, NetworkInterfaceHandler>        _interfaceHandlers;
         private Dictionary<SdpSession, SessionData>             _sessionData;
         private Dictionary<AnnouncementIdentifier, SessionData> _announcements;
+        private SynchronizationContext                          _synchronizationContext;
     }
 }
